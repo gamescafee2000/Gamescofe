@@ -1932,6 +1932,7 @@ var qrcode = function() {
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-qr-firebase', this)">🔗 QR وFirebase</button>
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-qr-tables', this)">📱 QR الطاولات</button>
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-admins', this)">👥 الأدمنية</button>
+                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-cashiers', this)">🧑‍💼 الكاشير</button>
                 </div>
 
                 <div id="tab-pin" class="tab-panel active">
@@ -2246,6 +2247,27 @@ var qrcode = function() {
                     </div>
                 </div>
 
+                <div id="tab-cashiers" class="tab-panel">
+                    <div class="settings-section">
+                        <h3>🧑‍💼 إدارة الكاشير</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">أضف كاشير باسمه ورمزه الخاص. عند استلام أي حساب (منفرد أو تثبيت طاولة كامل) رح يُطلب من الكاشير إدخال رمزه، وبعدها اسمه ينضاف تلقائياً بتقرير الفاتورة اللي يوصلك بتلغرام/واتساب. هذا الرمز مختلف تماماً عن رمز الأدمن، والكاشير ما يكدر يفتح الإعدادات فيه.</p>
+
+                        <div class="form-group">
+                            <label>اسم الكاشير:</label>
+                            <input type="text" id="new-cashier-name" placeholder="مثال: علي">
+                        </div>
+                        <div class="form-group">
+                            <label>الرمز الخاص:</label>
+                            <input type="password" id="new-cashier-pin" placeholder="4 أرقام أو أكثر">
+                        </div>
+                        <button class="btn-add-item" onclick="addNewCashier()">➕ إضافة كاشير جديد</button>
+
+                        <h3 style="margin-top: 14px;">📋 قائمة الكاشيرية الحاليين</h3>
+                        <div class="settings-items-list" id="cashiers-list-container">
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -2445,6 +2467,72 @@ var qrcode = function() {
         }
         // ============ نهاية إدارة الأدمنية ============
 
+        // ============ إدارة الكاشير ============
+        function renderCashiersList() {
+            const container = document.getElementById('cashiers-list-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (cashiersList.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#888; font-size:0.75rem; padding:10px;">ما في كاشيرية مسجلين بعد. طالما القائمة فاضية، الاستلام يشتغل عادي بدون طلب رمز كاشير.</p>';
+                return;
+            }
+
+            cashiersList.forEach(cashier => {
+                const row = document.createElement('div');
+                row.className = 'settings-item-row';
+                row.innerHTML = `
+                    <div class="row-info">
+                        <strong>${cashier.name}</strong>
+                        <span class="row-cat">الرمز: ${'•'.repeat(cashier.pin.length)}</span>
+                    </div>
+                    <div class="row-actions">
+                        <button class="btn-row-delete" onclick="deleteCashier('${cashier.id}')">🗑️ حذف</button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function addNewCashier() {
+            const name = document.getElementById('new-cashier-name').value.trim();
+            const pin = document.getElementById('new-cashier-pin').value.trim();
+
+            if (!name || !pin) {
+                alert('عبّي اسم الكاشير والرمز الخاص فيه!');
+                return;
+            }
+            if (pin.length < 4) {
+                alert('من أجل الأمان، الرمز لازم يكون 4 خانات أو أكثر!');
+                return;
+            }
+            if (getCashierByPin(pin)) {
+                alert('هذا الرمز مستخدم مسبقاً من كاشير ثاني! اختر رمز مختلف.');
+                return;
+            }
+
+            cashiersList.push({ id: String(new Date().getTime()), name, pin });
+            saveToStorage();
+
+            document.getElementById('new-cashier-name').value = '';
+            document.getElementById('new-cashier-pin').value = '';
+
+            renderCashiersList();
+            alert(`تمت إضافة الكاشير "${name}" بنجاح! ✅`);
+        }
+
+        function deleteCashier(id) {
+            const cashier = cashiersList.find(c => c.id === id);
+            if (!cashier) return;
+
+            if (confirm(`هل تريد حذف الكاشير "${cashier.name}"؟`)) {
+                cashiersList = cashiersList.filter(c => c.id !== id);
+                saveToStorage();
+                renderCashiersList();
+            }
+        }
+        // ============ نهاية إدارة الكاشير ============
+
         let cafeName = localStorage.getItem('cafe_name_v9') || 'كيمز كوفي';
         let cafeNameEn = localStorage.getItem('cafe_name_en_v9') || "GAME'S COFFEE";
         let totalTables = parseInt(localStorage.getItem('cafe_total_tables_v9')) || 15;
@@ -2494,11 +2582,17 @@ var qrcode = function() {
         let productsList = JSON.parse(localStorage.getItem('cafe_products_list_v9')) || defaultProducts;
         let systemPin = localStorage.getItem('cafe_system_pin_v9') || "66666";
         let adminsList = JSON.parse(localStorage.getItem('cafe_admins_list_v9')) || [];
+        let cashiersList = JSON.parse(localStorage.getItem('cafe_cashiers_list_v9')) || [];
 
         // يتحقق إذا الرمز المدخل يخص الرمز الرئيسي أو أي أدمن مسجل بالنظام
         function isValidAdminPin(pin) {
             if (pin === systemPin) return true;
             return adminsList.some(a => a.pin === pin);
+        }
+
+        // يرجع بيانات الكاشير صاحب هذا الرمز، أو null إذا الرمز غلط
+        function getCashierByPin(pin) {
+            return cashiersList.find(c => c.pin === pin) || null;
         }
         let customThemeColor = localStorage.getItem('cafe_custom_color_v9') || "#f39c12";
         let achievements = JSON.parse(localStorage.getItem('cafe_achievements_v9')) || defaultAchievements;
@@ -3776,6 +3870,7 @@ var qrcode = function() {
             localStorage.setItem('monthly_games_sales_v9', monthlyGameSales);
             localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
             localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
+            localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
             localStorage.setItem('cafe_invoice_lottery_v9', JSON.stringify(invoiceLottery));
             pushLiveStateToFirebase();
         }
@@ -3871,6 +3966,7 @@ var qrcode = function() {
                 productSalesStats: productSalesStats,
                 systemPin: systemPin,
                 adminsList: adminsList,
+                cashiersList: cashiersList,
                 updatedAt: Date.now(),
                 updatedByDevice: deviceSyncId
             }).then(() => {
@@ -3925,6 +4021,7 @@ var qrcode = function() {
                     if (data.productSalesStats) productSalesStats = data.productSalesStats;
                     if (data.systemPin) systemPin = data.systemPin;
                     if (data.adminsList) adminsList = data.adminsList;
+                    if (data.cashiersList) cashiersList = data.cashiersList;
 
                     ensureTablesDataStructure();
 
@@ -3945,6 +4042,7 @@ var qrcode = function() {
                     localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
                     localStorage.setItem('cafe_system_pin_v9', systemPin);
                     localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
+                    localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
 
                     refreshAllUIAfterSync();
                 } catch (e) {
@@ -4142,6 +4240,7 @@ var qrcode = function() {
 
                 renderLotteryUI();
                 renderAdminsList();
+                renderCashiersList();
                 loadConnectionSettingsUI();
                 loadFirebaseSettingsUI();
                 renderDiscountCodeSettingsUI();
@@ -4833,7 +4932,18 @@ var qrcode = function() {
             const itemTotal = roundToNearest250(item.price * item.qty);
 
             if(confirm(`هل تريد استلام حساب "${item.name}" بقيمة (${itemTotal.toLocaleString()} د.ع) بشكل منفرد؟`)) {
-                
+
+                let cashier = null;
+                if (cashiersList.length > 0) {
+                    const cashierPin = prompt('أدخل رمزك الخاص كـ كاشير لإتمام الاستلام:');
+                    if (cashierPin === null) return;
+                    cashier = getCashierByPin(cashierPin.trim());
+                    if (!cashier) {
+                        alert('رمز الكاشير غير صحيح! تم إلغاء عملية الاستلام.');
+                        return;
+                    }
+                }
+
                 dailyTotalSales += itemTotal;
                 weeklyTotalSales += itemTotal;
                 monthlyTotalSales += itemTotal;
@@ -4859,6 +4969,9 @@ var qrcode = function() {
                 message += `▪️ طاولة رقم: ${activeTable}\n`;
                 message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
                 message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
+                if (cashier) {
+                    message += `🧑‍💼 الكاشير: ${cashier.name}\n`;
+                }
                 message += `-------------------------\n`;
                 message += `▪️ المادة المستلمة: ${item.name} (عدد ${item.qty})\n`;
                 if(item.timeDetails) {
@@ -4940,7 +5053,18 @@ var qrcode = function() {
             finalTotal = roundToNearest250(finalTotal);
 
             if(confirm(`هل تريد تثبيت حساب طاولة ${activeTable} بمبلغ (${finalTotal.toLocaleString()} د.ع)؟`)) {
-                
+
+                let cashier = null;
+                if (cashiersList.length > 0) {
+                    const cashierPin = prompt('أدخل رمزك الخاص كـ كاشير لإتمام تثبيت الحساب:');
+                    if (cashierPin === null) return;
+                    cashier = getCashierByPin(cashierPin.trim());
+                    if (!cashier) {
+                        alert('رمز الكاشير غير صحيح! تم إلغاء عملية التثبيت.');
+                        return;
+                    }
+                }
+
                 dailyTotalSales += finalTotal;
                 dailyTotalDiscounts += discount;
                 weeklyTotalSales += finalTotal;
@@ -4982,6 +5106,9 @@ var qrcode = function() {
                 message += `▪️ طاولة رقم: ${activeTable}\n`;
                 message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
                 message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
+                if (cashier) {
+                    message += `🧑‍💼 الكاشير: ${cashier.name}\n`;
+                }
                 if (lotteryEntry) {
                     message += `🎟️ رقم الفاتورة (القرعة): *${lotteryEntry.number} / 100*\n`;
                 }
