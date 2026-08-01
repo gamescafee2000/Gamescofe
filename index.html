@@ -2583,6 +2583,8 @@ var qrcode = function() {
         let systemPin = localStorage.getItem('cafe_system_pin_v9') || "66666";
         let adminsList = JSON.parse(localStorage.getItem('cafe_admins_list_v9')) || [];
         let cashiersList = JSON.parse(localStorage.getItem('cafe_cashiers_list_v9')) || [];
+        // مجموع المبالغ اللي استلمها كل كاشير اليوم (id الكاشير => المبلغ)، يتصفر مع كل إرسال للتقرير اليومي
+        let cashierDailyTotals = JSON.parse(localStorage.getItem('cafe_cashier_daily_totals_v9')) || {};
 
         // يتحقق إذا الرمز المدخل يخص الرمز الرئيسي أو أي أدمن مسجل بالنظام
         function isValidAdminPin(pin) {
@@ -3791,7 +3793,21 @@ var qrcode = function() {
                 reportMsg += `⚠️ تم تصفير العدادات اليومية والسجل بالكامل يدوياً بنجاح.`;
 
                 pendingInvoices.push(reportMsg);
-                
+
+                // تقرير منفصل لكل كاشير عنده مبالغ مستلمة بهذه الفترة
+                cashiersList.forEach(cashier => {
+                    const cashierTotal = cashierDailyTotals[cashier.id] || 0;
+                    if (cashierTotal > 0) {
+                        let cashierMsg = `🧑‍💼 *تقرير كاشير - ${cashier.name} - ${cafeName}*\n`;
+                        cashierMsg += `📅 التاريخ: ${formattedDate}\n`;
+                        cashierMsg += `⏰ وقت الإغلاق: ${formattedTime}\n`;
+                        cashierMsg += `-------------------------\n`;
+                        cashierMsg += `💰 إجمالي المبالغ المستلمة: *${cashierTotal.toLocaleString()} د.ع*`;
+                        pendingInvoices.push(cashierMsg);
+                    }
+                });
+                cashierDailyTotals = {};
+
                 dailyTotalSales = 0;
                 dailyTotalDiscounts = 0;
                 dailyGameSales = 0;
@@ -3871,6 +3887,7 @@ var qrcode = function() {
             localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
             localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
             localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
+            localStorage.setItem('cafe_cashier_daily_totals_v9', JSON.stringify(cashierDailyTotals));
             localStorage.setItem('cafe_invoice_lottery_v9', JSON.stringify(invoiceLottery));
             pushLiveStateToFirebase();
         }
@@ -3967,6 +3984,7 @@ var qrcode = function() {
                 systemPin: systemPin,
                 adminsList: adminsList,
                 cashiersList: cashiersList,
+                cashierDailyTotals: cashierDailyTotals,
                 updatedAt: Date.now(),
                 updatedByDevice: deviceSyncId
             }).then(() => {
@@ -4022,6 +4040,7 @@ var qrcode = function() {
                     if (data.systemPin) systemPin = data.systemPin;
                     if (data.adminsList) adminsList = data.adminsList;
                     if (data.cashiersList) cashiersList = data.cashiersList;
+                    if (data.cashierDailyTotals) cashierDailyTotals = data.cashierDailyTotals;
 
                     ensureTablesDataStructure();
 
@@ -4043,6 +4062,7 @@ var qrcode = function() {
                     localStorage.setItem('cafe_system_pin_v9', systemPin);
                     localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
                     localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
+                    localStorage.setItem('cafe_cashier_daily_totals_v9', JSON.stringify(cashierDailyTotals));
 
                     refreshAllUIAfterSync();
                 } catch (e) {
@@ -4947,7 +4967,11 @@ var qrcode = function() {
                 dailyTotalSales += itemTotal;
                 weeklyTotalSales += itemTotal;
                 monthlyTotalSales += itemTotal;
-                achievements.cumulativeSales += itemTotal; 
+                achievements.cumulativeSales += itemTotal;
+
+                if (cashier) {
+                    cashierDailyTotals[cashier.id] = (cashierDailyTotals[cashier.id] || 0) + itemTotal;
+                }
 
                 if (item.category === 'games') {
                     dailyGameSales += itemTotal;
@@ -5071,6 +5095,10 @@ var qrcode = function() {
                 weeklyTotalDiscounts += discount;
                 monthlyTotalSales += finalTotal;
                 monthlyTotalDiscounts += discount;
+
+                if (cashier) {
+                    cashierDailyTotals[cashier.id] = (cashierDailyTotals[cashier.id] || 0) + finalTotal;
+                }
                 
                 let gamesSum = 0;
                 if(tablesData[activeTable].psElapsedCost > 0) {
