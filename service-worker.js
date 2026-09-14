@@ -1,42 +1,36 @@
-// Service Worker لكيمز كوفي — بسيط ومحافظ عمداً
-// الهدف: السماح بتثبيت التطبيق على الشاشة الرئيسية فقط، بدون أي تخزين مؤقت عدواني
-// يعني: دائماً يجيب آخر نسخة من الإنترنت أول، ولا يخزن index.html أو menu.html أبداً
-// هذا يمنع مشاكل "نسخة قديمة عالقة بالكاش" اللي واجهناها سابقاً
+const CACHE_NAME = 'kims-coffee-cache-v9';
+const FILES_TO_CACHE = [
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
+];
 
-const CACHE_NAME = 'kims-coffee-v1';
-
-// لا نخزن أي صفحة HTML مسبقاً — بس اسم الكاش موجود لأغراض مستقبلية بسيطة (أيقونات مثلاً)
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+  );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
   );
+  self.clients.claim();
 });
 
-// إستراتيجية "الشبكة أولاً دائماً" لكل الطلبات — إذا فشل الإنترنت فقط نحاول الكاش كحل أخير
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-
+  // شبكة أولاً مع رجوع للكاش عند انقطاع الاتصال (يسمح بإرسال تقارير تيليجرام لما يكون في نت)
   event.respondWith(
     fetch(event.request)
-      .then((networkResponse) => {
-        // نخزن نسخة احتياطية بصمت للاستخدام أوقات انقطاع النت فقط (لا يؤثر على أولوية الشبكة)
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        }).catch(() => {});
-        return networkResponse;
+      .then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
       })
-      .catch(() => {
-        // ما فيه إنترنت حالياً، نرجع آخر نسخة محفوظة إذا موجودة
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });
