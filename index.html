@@ -2,9 +2,6 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>كيمز كوفي | نظام إدارة المبيعات الذكي</title>
     <link rel="manifest" href="./manifest.json">
@@ -15,1302 +12,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="كيمز كوفي">
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-    <script>
-//---------------------------------------------------------------------
-//
-// QR Code Generator for JavaScript
-//
-// Copyright (c) 2009 Kazuhiko Arase
-//
-// URL: http://www.d-project.com/
-//
-// Licensed under the MIT license:
-//  http://www.opensource.org/licenses/mit-license.php
-//
-// The word 'QR Code' is registered trademark of
-// DENSO WAVE INCORPORATED
-//  http://www.denso-wave.com/qrcode/faqpatent-e.html
-//
-//---------------------------------------------------------------------
-
-var qrcode = function() {
-
-  var qrcode = function(typeNumber, errorCorrectionLevel) {
-
-    var PAD0 = 0xEC;
-    var PAD1 = 0x11;
-
-    var _typeNumber = typeNumber;
-    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
-    var _modules = null;
-    var _moduleCount = 0;
-    var _dataCache = null;
-    var _dataList = new Array();
-
-    var _this = {};
-
-    var makeImpl = function(test, maskPattern) {
-
-      _moduleCount = _typeNumber * 4 + 17;
-      _modules = function(moduleCount) {
-        var modules = new Array(moduleCount);
-        for (var row = 0; row < moduleCount; row += 1) {
-          modules[row] = new Array(moduleCount);
-          for (var col = 0; col < moduleCount; col += 1) {
-            modules[row][col] = null;
-          }
-        }
-        return modules;
-      }(_moduleCount);
-
-      setupPositionProbePattern(0, 0);
-      setupPositionProbePattern(_moduleCount - 7, 0);
-      setupPositionProbePattern(0, _moduleCount - 7);
-      setupPositionAdjustPattern();
-      setupTimingPattern();
-      setupTypeInfo(test, maskPattern);
-
-      if (_typeNumber >= 7) {
-        setupTypeNumber(test);
-      }
-
-      if (_dataCache == null) {
-        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
-      }
-
-      mapData(_dataCache, maskPattern);
-    };
-
-    var setupPositionProbePattern = function(row, col) {
-
-      for (var r = -1; r <= 7; r += 1) {
-
-        if (row + r <= -1 || _moduleCount <= row + r) continue;
-
-        for (var c = -1; c <= 7; c += 1) {
-
-          if (col + c <= -1 || _moduleCount <= col + c) continue;
-
-          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
-              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
-              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
-            _modules[row + r][col + c] = true;
-          } else {
-            _modules[row + r][col + c] = false;
-          }
-        }
-      }
-    };
-
-    var getBestMaskPattern = function() {
-
-      var minLostPoint = 0;
-      var pattern = 0;
-
-      for (var i = 0; i < 8; i += 1) {
-
-        makeImpl(true, i);
-
-        var lostPoint = QRUtil.getLostPoint(_this);
-
-        if (i == 0 || minLostPoint > lostPoint) {
-          minLostPoint = lostPoint;
-          pattern = i;
-        }
-      }
-
-      return pattern;
-    };
-
-    var setupTimingPattern = function() {
-
-      for (var r = 8; r < _moduleCount - 8; r += 1) {
-        if (_modules[r][6] != null) {
-          continue;
-        }
-        _modules[r][6] = (r % 2 == 0);
-      }
-
-      for (var c = 8; c < _moduleCount - 8; c += 1) {
-        if (_modules[6][c] != null) {
-          continue;
-        }
-        _modules[6][c] = (c % 2 == 0);
-      }
-    };
-
-    var setupPositionAdjustPattern = function() {
-
-      var pos = QRUtil.getPatternPosition(_typeNumber);
-
-      for (var i = 0; i < pos.length; i += 1) {
-
-        for (var j = 0; j < pos.length; j += 1) {
-
-          var row = pos[i];
-          var col = pos[j];
-
-          if (_modules[row][col] != null) {
-            continue;
-          }
-
-          for (var r = -2; r <= 2; r += 1) {
-
-            for (var c = -2; c <= 2; c += 1) {
-
-              if (r == -2 || r == 2 || c == -2 || c == 2
-                  || (r == 0 && c == 0) ) {
-                _modules[row + r][col + c] = true;
-              } else {
-                _modules[row + r][col + c] = false;
-              }
-            }
-          }
-        }
-      }
-    };
-
-    var setupTypeNumber = function(test) {
-
-      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
-
-      for (var i = 0; i < 18; i += 1) {
-        var mod = (!test && ( (bits >> i) & 1) == 1);
-        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
-      }
-
-      for (var i = 0; i < 18; i += 1) {
-        var mod = (!test && ( (bits >> i) & 1) == 1);
-        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
-      }
-    };
-
-    var setupTypeInfo = function(test, maskPattern) {
-
-      var data = (_errorCorrectionLevel << 3) | maskPattern;
-      var bits = QRUtil.getBCHTypeInfo(data);
-
-      for (var i = 0; i < 15; i += 1) {
-
-        var mod = (!test && ( (bits >> i) & 1) == 1);
-
-        if (i < 6) {
-          _modules[i][8] = mod;
-        } else if (i < 8) {
-          _modules[i + 1][8] = mod;
-        } else {
-          _modules[_moduleCount - 15 + i][8] = mod;
-        }
-      }
-
-      for (var i = 0; i < 15; i += 1) {
-
-        var mod = (!test && ( (bits >> i) & 1) == 1);
-
-        if (i < 8) {
-          _modules[8][_moduleCount - i - 1] = mod;
-        } else if (i < 9) {
-          _modules[8][15 - i - 1 + 1] = mod;
-        } else {
-          _modules[8][15 - i - 1] = mod;
-        }
-      }
-
-      _modules[_moduleCount - 8][8] = (!test);
-    };
-
-    var mapData = function(data, maskPattern) {
-
-      var inc = -1;
-      var row = _moduleCount - 1;
-      var bitIndex = 7;
-      var byteIndex = 0;
-      var maskFunc = QRUtil.getMaskFunction(maskPattern);
-
-      for (var col = _moduleCount - 1; col > 0; col -= 2) {
-
-        if (col == 6) col -= 1;
-
-        while (true) {
-
-          for (var c = 0; c < 2; c += 1) {
-
-            if (_modules[row][col - c] == null) {
-
-              var dark = false;
-
-              if (byteIndex < data.length) {
-                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
-              }
-
-              var mask = maskFunc(row, col - c);
-
-              if (mask) {
-                dark = !dark;
-              }
-
-              _modules[row][col - c] = dark;
-              bitIndex -= 1;
-
-              if (bitIndex == -1) {
-                byteIndex += 1;
-                bitIndex = 7;
-              }
-            }
-          }
-
-          row += inc;
-
-          if (row < 0 || _moduleCount <= row) {
-            row -= inc;
-            inc = -inc;
-            break;
-          }
-        }
-      }
-    };
-
-    var createBytes = function(buffer, rsBlocks) {
-
-      var offset = 0;
-
-      var maxDcCount = 0;
-      var maxEcCount = 0;
-
-      var dcdata = new Array(rsBlocks.length);
-      var ecdata = new Array(rsBlocks.length);
-
-      for (var r = 0; r < rsBlocks.length; r += 1) {
-
-        var dcCount = rsBlocks[r].dataCount;
-        var ecCount = rsBlocks[r].totalCount - dcCount;
-
-        maxDcCount = Math.max(maxDcCount, dcCount);
-        maxEcCount = Math.max(maxEcCount, ecCount);
-
-        dcdata[r] = new Array(dcCount);
-
-        for (var i = 0; i < dcdata[r].length; i += 1) {
-          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
-        }
-        offset += dcCount;
-
-        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
-        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
-
-        var modPoly = rawPoly.mod(rsPoly);
-        ecdata[r] = new Array(rsPoly.getLength() - 1);
-        for (var i = 0; i < ecdata[r].length; i += 1) {
-          var modIndex = i + modPoly.getLength() - ecdata[r].length;
-          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
-        }
-      }
-
-      var totalCodeCount = 0;
-      for (var i = 0; i < rsBlocks.length; i += 1) {
-        totalCodeCount += rsBlocks[i].totalCount;
-      }
-
-      var data = new Array(totalCodeCount);
-      var index = 0;
-
-      for (var i = 0; i < maxDcCount; i += 1) {
-        for (var r = 0; r < rsBlocks.length; r += 1) {
-          if (i < dcdata[r].length) {
-            data[index] = dcdata[r][i];
-            index += 1;
-          }
-        }
-      }
-
-      for (var i = 0; i < maxEcCount; i += 1) {
-        for (var r = 0; r < rsBlocks.length; r += 1) {
-          if (i < ecdata[r].length) {
-            data[index] = ecdata[r][i];
-            index += 1;
-          }
-        }
-      }
-
-      return data;
-    };
-
-    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
-
-      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
-
-      var buffer = qrBitBuffer();
-
-      for (var i = 0; i < dataList.length; i += 1) {
-        var data = dataList[i];
-        buffer.put(data.getMode(), 4);
-        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
-        data.write(buffer);
-      }
-
-      var totalDataCount = 0;
-      for (var i = 0; i < rsBlocks.length; i += 1) {
-        totalDataCount += rsBlocks[i].dataCount;
-      }
-
-      if (buffer.getLengthInBits() > totalDataCount * 8) {
-        throw new Error('code length overflow. ('
-          + buffer.getLengthInBits()
-          + '>'
-          + totalDataCount * 8
-          + ')');
-      }
-
-      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
-        buffer.put(0, 4);
-      }
-
-      while (buffer.getLengthInBits() % 8 != 0) {
-        buffer.putBit(false);
-      }
-
-      while (true) {
-
-        if (buffer.getLengthInBits() >= totalDataCount * 8) {
-          break;
-        }
-        buffer.put(PAD0, 8);
-
-        if (buffer.getLengthInBits() >= totalDataCount * 8) {
-          break;
-        }
-        buffer.put(PAD1, 8);
-      }
-
-      return createBytes(buffer, rsBlocks);
-    };
-
-    _this.addData = function(data, mode) {
-
-      mode = mode || 'Byte';
-
-      var newData = null;
-
-      switch(mode) {
-      case 'Numeric' :
-        newData = qrNumber(data);
-        break;
-      case 'Alphanumeric' :
-        newData = qrAlphaNum(data);
-        break;
-      case 'Byte' :
-        newData = qr8BitByte(data);
-        break;
-      case 'Kanji' :
-        newData = qrKanji(data);
-        break;
-      default :
-        throw 'mode:' + mode;
-      }
-
-      _dataList.push(newData);
-      _dataCache = null;
-    };
-
-    _this.isDark = function(row, col) {
-      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
-        throw new Error(row + ',' + col);
-      }
-      return _modules[row][col];
-    };
-
-    _this.getModuleCount = function() {
-      return _moduleCount;
-    };
-
-    _this.make = function() {
-      if (_typeNumber < 1) {
-        var typeNumber = 1;
-        for (; typeNumber < 40; typeNumber++) {
-          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
-          var buffer = qrBitBuffer();
-          for (var i = 0; i < _dataList.length; i += 1) {
-            var data = _dataList[i];
-            buffer.put(data.getMode(), 4);
-            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
-            data.write(buffer);
-          }
-          var totalDataCount = 0;
-          for (var i = 0; i < rsBlocks.length; i += 1) {
-            totalDataCount += rsBlocks[i].dataCount;
-          }
-          if (buffer.getLengthInBits() <= totalDataCount * 8) {
-            break;
-          }
-        }
-        _typeNumber = typeNumber;
-      }
-      makeImpl(false, getBestMaskPattern() );
-    };
-
-    return _this;
-  };
-
-  qrcode.stringToBytes = function(s) {
-    var bytes = new Array();
-    for (var i = 0; i < s.length; i += 1) {
-      var c = s.charCodeAt(i);
-      if (c < 128) {
-        bytes.push(c);
-      } else if (c < 2048) {
-        bytes.push(192 | (c >> 6));
-        bytes.push(128 | (c & 63));
-      } else {
-        bytes.push(224 | (c >> 12));
-        bytes.push(128 | ((c >> 6) & 63));
-        bytes.push(128 | (c & 63));
-      }
-    }
-    return bytes;
-  };
-
-  var QRMode = {
-    MODE_NUMBER :    1 << 0,
-    MODE_ALPHA_NUM : 1 << 1,
-    MODE_8BIT_BYTE : 1 << 2,
-    MODE_KANJI :     1 << 3
-  };
-
-  var QRErrorCorrectionLevel = {
-    L : 1,
-    M : 0,
-    Q : 3,
-    H : 2
-  };
-
-  var QRMaskPattern = {
-    PATTERN000 : 0,
-    PATTERN001 : 1,
-    PATTERN010 : 2,
-    PATTERN011 : 3,
-    PATTERN100 : 4,
-    PATTERN101 : 5,
-    PATTERN110 : 6,
-    PATTERN111 : 7
-  };
-
-  var QRUtil = function() {
-
-    var PATTERN_POSITION_TABLE = [
-      [],
-      [6, 18],
-      [6, 22],
-      [6, 26],
-      [6, 30],
-      [6, 34],
-      [6, 22, 38],
-      [6, 24, 42],
-      [6, 26, 46],
-      [6, 28, 50],
-      [6, 30, 54],
-      [6, 32, 58],
-      [6, 34, 62],
-      [6, 26, 46, 66],
-      [6, 26, 48, 70],
-      [6, 26, 50, 74],
-      [6, 30, 54, 78],
-      [6, 30, 56, 82],
-      [6, 30, 58, 86],
-      [6, 34, 62, 90],
-      [6, 28, 50, 72, 94],
-      [6, 26, 50, 74, 98],
-      [6, 30, 54, 78, 102],
-      [6, 28, 54, 80, 106],
-      [6, 32, 58, 84, 110],
-      [6, 30, 58, 86, 114],
-      [6, 34, 62, 90, 118],
-      [6, 26, 50, 74, 98, 122],
-      [6, 30, 54, 78, 102, 126],
-      [6, 26, 52, 78, 104, 130],
-      [6, 30, 56, 82, 108, 134],
-      [6, 34, 60, 86, 112, 138],
-      [6, 30, 58, 86, 114, 142],
-      [6, 34, 62, 90, 118, 146],
-      [6, 30, 54, 78, 102, 126, 150],
-      [6, 24, 50, 76, 102, 128, 154],
-      [6, 28, 54, 80, 106, 132, 158],
-      [6, 32, 58, 84, 110, 136, 162],
-      [6, 26, 54, 82, 110, 138, 166],
-      [6, 30, 58, 86, 114, 142, 170]
-    ];
-    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
-    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
-    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
-
-    var _this = {};
-
-    var getBCHDigit = function(data) {
-      var digit = 0;
-      while (data != 0) {
-        digit += 1;
-        data >>>= 1;
-      }
-      return digit;
-    };
-
-    _this.getBCHTypeInfo = function(data) {
-      var d = data << 10;
-      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
-        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
-      }
-      return ( (data << 10) | d) ^ G15_MASK;
-    };
-
-    _this.getBCHTypeNumber = function(data) {
-      var d = data << 12;
-      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
-        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
-      }
-      return (data << 12) | d;
-    };
-
-    _this.getPatternPosition = function(typeNumber) {
-      return PATTERN_POSITION_TABLE[typeNumber - 1];
-    };
-
-    _this.getMaskFunction = function(maskPattern) {
-
-      switch (maskPattern) {
-
-      case QRMaskPattern.PATTERN000 :
-        return function(i, j) { return (i + j) % 2 == 0; };
-      case QRMaskPattern.PATTERN001 :
-        return function(i, j) { return i % 2 == 0; };
-      case QRMaskPattern.PATTERN010 :
-        return function(i, j) { return j % 3 == 0; };
-      case QRMaskPattern.PATTERN011 :
-        return function(i, j) { return (i + j) % 3 == 0; };
-      case QRMaskPattern.PATTERN100 :
-        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
-      case QRMaskPattern.PATTERN101 :
-        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
-      case QRMaskPattern.PATTERN110 :
-        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
-      case QRMaskPattern.PATTERN111 :
-        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
-
-      default :
-        throw new Error('bad maskPattern:' + maskPattern);
-      }
-    };
-
-    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
-      var a = qrPolynomial([1], 0);
-      for (var i = 0; i < errorCorrectLength; i += 1) {
-        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
-      }
-      return a;
-    };
-
-    _this.getLengthInBits = function(mode, type) {
-
-      if (1 <= type && type < 10) {
-
-        switch(mode) {
-        case QRMode.MODE_NUMBER    : return 10;
-        case QRMode.MODE_ALPHA_NUM : return 9;
-        case QRMode.MODE_8BIT_BYTE : return 8;
-        case QRMode.MODE_KANJI     : return 8;
-        default :
-          throw new Error('mode:' + mode);
-        }
-
-      } else if (type < 27) {
-
-        switch(mode) {
-        case QRMode.MODE_NUMBER    : return 12;
-        case QRMode.MODE_ALPHA_NUM : return 11;
-        case QRMode.MODE_8BIT_BYTE : return 16;
-        case QRMode.MODE_KANJI     : return 10;
-        default :
-          throw new Error('mode:' + mode);
-        }
-
-      } else if (type < 41) {
-
-        switch(mode) {
-        case QRMode.MODE_NUMBER    : return 14;
-        case QRMode.MODE_ALPHA_NUM : return 13;
-        case QRMode.MODE_8BIT_BYTE : return 16;
-        case QRMode.MODE_KANJI     : return 12;
-        default :
-          throw new Error('mode:' + mode);
-        }
-
-      } else {
-        throw new Error('type:' + type);
-      }
-    };
-
-    _this.getLostPoint = function(qrcode) {
-
-      var moduleCount = qrcode.getModuleCount();
-
-      var lostPoint = 0;
-
-      for (var row = 0; row < moduleCount; row += 1) {
-        for (var col = 0; col < moduleCount; col += 1) {
-
-          var sameCount = 0;
-          var dark = qrcode.isDark(row, col);
-
-          for (var r = -1; r <= 1; r += 1) {
-
-            if (row + r < 0 || moduleCount <= row + r) {
-              continue;
-            }
-
-            for (var c = -1; c <= 1; c += 1) {
-
-              if (col + c < 0 || moduleCount <= col + c) {
-                continue;
-              }
-
-              if (r == 0 && c == 0) {
-                continue;
-              }
-
-              if (dark == qrcode.isDark(row + r, col + c) ) {
-                sameCount += 1;
-              }
-            }
-          }
-
-          if (sameCount > 5) {
-            lostPoint += (3 + sameCount - 5);
-          }
-        }
-      };
-
-      for (var row = 0; row < moduleCount - 1; row += 1) {
-        for (var col = 0; col < moduleCount - 1; col += 1) {
-          var count = 0;
-          if (qrcode.isDark(row, col) ) count += 1;
-          if (qrcode.isDark(row + 1, col) ) count += 1;
-          if (qrcode.isDark(row, col + 1) ) count += 1;
-          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
-          if (count == 0 || count == 4) {
-            lostPoint += 3;
-          }
-        }
-      }
-
-      for (var row = 0; row < moduleCount; row += 1) {
-        for (var col = 0; col < moduleCount - 6; col += 1) {
-          if (qrcode.isDark(row, col)
-              && !qrcode.isDark(row, col + 1)
-              &&  qrcode.isDark(row, col + 2)
-              &&  qrcode.isDark(row, col + 3)
-              &&  qrcode.isDark(row, col + 4)
-              && !qrcode.isDark(row, col + 5)
-              &&  qrcode.isDark(row, col + 6) ) {
-            lostPoint += 40;
-          }
-        }
-      }
-
-      for (var col = 0; col < moduleCount; col += 1) {
-        for (var row = 0; row < moduleCount - 6; row += 1) {
-          if (qrcode.isDark(row, col)
-              && !qrcode.isDark(row + 1, col)
-              &&  qrcode.isDark(row + 2, col)
-              &&  qrcode.isDark(row + 3, col)
-              &&  qrcode.isDark(row + 4, col)
-              && !qrcode.isDark(row + 5, col)
-              &&  qrcode.isDark(row + 6, col) ) {
-            lostPoint += 40;
-          }
-        }
-      }
-
-      var darkCount = 0;
-
-      for (var col = 0; col < moduleCount; col += 1) {
-        for (var row = 0; row < moduleCount; row += 1) {
-          if (qrcode.isDark(row, col) ) {
-            darkCount += 1;
-          }
-        }
-      }
-
-      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
-      lostPoint += ratio * 10;
-
-      return lostPoint;
-    };
-
-    return _this;
-  }();
-
-  var QRMath = function() {
-
-    var EXP_TABLE = new Array(256);
-    var LOG_TABLE = new Array(256);
-
-    for (var i = 0; i < 8; i += 1) {
-      EXP_TABLE[i] = 1 << i;
-    }
-    for (var i = 8; i < 256; i += 1) {
-      EXP_TABLE[i] = EXP_TABLE[i - 4]
-        ^ EXP_TABLE[i - 5]
-        ^ EXP_TABLE[i - 6]
-        ^ EXP_TABLE[i - 8];
-    }
-    for (var i = 0; i < 255; i += 1) {
-      LOG_TABLE[EXP_TABLE[i] ] = i;
-    }
-
-    var _this = {};
-
-    _this.glog = function(n) {
-
-      if (n < 1) {
-        throw new Error('glog(' + n + ')');
-      }
-
-      return LOG_TABLE[n];
-    };
-
-    _this.gexp = function(n) {
-
-      while (n < 0) {
-        n += 255;
-      }
-
-      while (n >= 256) {
-        n -= 255;
-      }
-
-      return EXP_TABLE[n];
-    };
-
-    return _this;
-  }();
-
-  function qrPolynomial(num, shift) {
-
-    if (typeof num.length == 'undefined') {
-      throw new Error(num.length + '/' + shift);
-    }
-
-    var _num = function() {
-      var offset = 0;
-      while (offset < num.length && num[offset] == 0) {
-        offset += 1;
-      }
-      var _num = new Array(num.length - offset + shift);
-      for (var i = 0; i < num.length - offset; i += 1) {
-        _num[i] = num[i + offset];
-      }
-      return _num;
-    }();
-
-    var _this = {};
-
-    _this.getAt = function(index) {
-      return _num[index];
-    };
-
-    _this.getLength = function() {
-      return _num.length;
-    };
-
-    _this.multiply = function(e) {
-
-      var num = new Array(_this.getLength() + e.getLength() - 1);
-
-      for (var i = 0; i < _this.getLength(); i += 1) {
-        for (var j = 0; j < e.getLength(); j += 1) {
-          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
-        }
-      }
-
-      return qrPolynomial(num, 0);
-    };
-
-    _this.mod = function(e) {
-
-      if (_this.getLength() - e.getLength() < 0) {
-        return _this;
-      }
-
-      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
-
-      var num = new Array(_this.getLength() );
-      for (var i = 0; i < _this.getLength(); i += 1) {
-        num[i] = _this.getAt(i);
-      }
-
-      for (var i = 0; i < e.getLength(); i += 1) {
-        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
-      }
-
-      return qrPolynomial(num, 0).mod(e);
-    };
-
-    return _this;
-  };
-
-  var QRRSBlock = function() {
-
-    var RS_BLOCK_TABLE = [
-
-      [1, 26, 19],
-      [1, 26, 16],
-      [1, 26, 13],
-      [1, 26, 9],
-
-      [1, 44, 34],
-      [1, 44, 28],
-      [1, 44, 22],
-      [1, 44, 16],
-
-      [1, 70, 55],
-      [1, 70, 44],
-      [2, 35, 17],
-      [2, 35, 13],
-
-      [1, 100, 80],
-      [2, 50, 32],
-      [2, 50, 24],
-      [4, 25, 9],
-
-      [1, 134, 108],
-      [2, 67, 43],
-      [2, 33, 15, 2, 34, 16],
-      [2, 33, 11, 2, 34, 12],
-
-      [2, 86, 68],
-      [4, 43, 27],
-      [4, 43, 19],
-      [4, 43, 15],
-
-      [2, 98, 78],
-      [4, 49, 31],
-      [2, 32, 14, 4, 33, 15],
-      [4, 39, 13, 1, 40, 14],
-
-      [2, 121, 97],
-      [2, 60, 38, 2, 61, 39],
-      [4, 40, 18, 2, 41, 19],
-      [4, 40, 14, 2, 41, 15],
-
-      [2, 146, 116],
-      [3, 58, 36, 2, 59, 37],
-      [4, 36, 16, 4, 37, 17],
-      [4, 36, 12, 4, 37, 13],
-
-      [2, 86, 68, 2, 87, 69],
-      [4, 69, 43, 1, 70, 44],
-      [6, 43, 19, 2, 44, 20],
-      [6, 43, 15, 2, 44, 16],
-
-      [4, 101, 81],
-      [1, 80, 50, 4, 81, 51],
-      [4, 50, 22, 4, 51, 23],
-      [3, 36, 12, 8, 37, 13],
-
-      [2, 116, 92, 2, 117, 93],
-      [6, 58, 36, 2, 59, 37],
-      [4, 46, 20, 6, 47, 21],
-      [7, 42, 14, 4, 43, 15],
-
-      [4, 133, 107],
-      [8, 59, 37, 1, 60, 38],
-      [8, 44, 20, 4, 45, 21],
-      [12, 33, 11, 4, 34, 12],
-
-      [3, 145, 115, 1, 146, 116],
-      [4, 64, 40, 5, 65, 41],
-      [11, 36, 16, 5, 37, 17],
-      [11, 36, 12, 5, 37, 13],
-
-      [5, 109, 87, 1, 110, 88],
-      [5, 65, 41, 5, 66, 42],
-      [5, 54, 24, 7, 55, 25],
-      [11, 36, 12, 7, 37, 13],
-
-      [5, 122, 98, 1, 123, 99],
-      [7, 73, 45, 3, 74, 46],
-      [15, 43, 19, 2, 44, 20],
-      [3, 45, 15, 13, 46, 16],
-
-      [1, 135, 107, 5, 136, 108],
-      [10, 74, 46, 1, 75, 47],
-      [1, 50, 22, 15, 51, 23],
-      [2, 42, 14, 17, 43, 15],
-
-      [5, 150, 120, 1, 151, 121],
-      [9, 69, 43, 4, 70, 44],
-      [17, 50, 22, 1, 51, 23],
-      [2, 42, 14, 19, 43, 15],
-
-      [3, 141, 113, 4, 142, 114],
-      [3, 70, 44, 11, 71, 45],
-      [17, 47, 21, 4, 48, 22],
-      [9, 39, 13, 16, 40, 14],
-
-      [3, 135, 107, 5, 136, 108],
-      [3, 67, 41, 13, 68, 42],
-      [15, 54, 24, 5, 55, 25],
-      [15, 43, 15, 10, 44, 16],
-
-      [4, 144, 116, 4, 145, 117],
-      [17, 68, 42],
-      [17, 50, 22, 6, 51, 23],
-      [19, 46, 16, 6, 47, 17],
-
-      [2, 139, 111, 7, 140, 112],
-      [17, 74, 46],
-      [7, 54, 24, 16, 55, 25],
-      [34, 37, 13],
-
-      [4, 151, 121, 5, 152, 122],
-      [4, 75, 47, 14, 76, 48],
-      [11, 54, 24, 14, 55, 25],
-      [16, 45, 15, 14, 46, 16],
-
-      [6, 147, 117, 4, 148, 118],
-      [6, 73, 45, 14, 74, 46],
-      [11, 54, 24, 16, 55, 25],
-      [30, 46, 16, 2, 47, 17],
-
-      [8, 132, 106, 4, 133, 107],
-      [8, 75, 47, 13, 76, 48],
-      [7, 54, 24, 22, 55, 25],
-      [22, 45, 15, 13, 46, 16],
-
-      [10, 142, 114, 2, 143, 115],
-      [19, 74, 46, 4, 75, 47],
-      [28, 50, 22, 6, 51, 23],
-      [33, 46, 16, 4, 47, 17],
-
-      [8, 152, 122, 4, 153, 123],
-      [22, 73, 45, 3, 74, 46],
-      [8, 53, 23, 26, 54, 24],
-      [12, 45, 15, 28, 46, 16],
-
-      [3, 147, 117, 10, 148, 118],
-      [3, 73, 45, 23, 74, 46],
-      [4, 54, 24, 31, 55, 25],
-      [11, 45, 15, 31, 46, 16],
-
-      [7, 146, 116, 7, 147, 117],
-      [21, 73, 45, 7, 74, 46],
-      [1, 53, 23, 37, 54, 24],
-      [19, 45, 15, 26, 46, 16],
-
-      [5, 145, 115, 10, 146, 116],
-      [19, 75, 47, 10, 76, 48],
-      [15, 54, 24, 25, 55, 25],
-      [23, 45, 15, 25, 46, 16],
-
-      [13, 145, 115, 3, 146, 116],
-      [2, 74, 46, 29, 75, 47],
-      [42, 54, 24, 1, 55, 25],
-      [23, 45, 15, 28, 46, 16],
-
-      [17, 145, 115],
-      [10, 74, 46, 23, 75, 47],
-      [10, 54, 24, 35, 55, 25],
-      [19, 45, 15, 35, 46, 16],
-
-      [17, 145, 115, 1, 146, 116],
-      [14, 74, 46, 21, 75, 47],
-      [29, 54, 24, 19, 55, 25],
-      [11, 45, 15, 46, 46, 16],
-
-      [13, 145, 115, 6, 146, 116],
-      [14, 74, 46, 23, 75, 47],
-      [44, 54, 24, 7, 55, 25],
-      [59, 46, 16, 1, 47, 17],
-
-      [12, 151, 121, 7, 152, 122],
-      [12, 75, 47, 26, 76, 48],
-      [39, 54, 24, 14, 55, 25],
-      [22, 45, 15, 41, 46, 16],
-
-      [6, 151, 121, 14, 152, 122],
-      [6, 75, 47, 34, 76, 48],
-      [46, 54, 24, 10, 55, 25],
-      [2, 45, 15, 64, 46, 16],
-
-      [17, 152, 122, 4, 153, 123],
-      [29, 74, 46, 14, 75, 47],
-      [49, 54, 24, 10, 55, 25],
-      [24, 45, 15, 46, 46, 16],
-
-      [4, 152, 122, 18, 153, 123],
-      [13, 74, 46, 32, 75, 47],
-      [48, 54, 24, 14, 55, 25],
-      [42, 45, 15, 32, 46, 16],
-
-      [20, 147, 117, 4, 148, 118],
-      [40, 75, 47, 7, 76, 48],
-      [43, 54, 24, 22, 55, 25],
-      [10, 45, 15, 67, 46, 16],
-
-      [19, 148, 118, 6, 149, 119],
-      [18, 75, 47, 31, 76, 48],
-      [34, 54, 24, 34, 55, 25],
-      [20, 45, 15, 61, 46, 16]
-    ];
-
-    var qrRSBlock = function(totalCount, dataCount) {
-      var _this = {};
-      _this.totalCount = totalCount;
-      _this.dataCount = dataCount;
-      return _this;
-    };
-
-    var _this = {};
-
-    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
-
-      switch(errorCorrectionLevel) {
-      case QRErrorCorrectionLevel.L :
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
-      case QRErrorCorrectionLevel.M :
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
-      case QRErrorCorrectionLevel.Q :
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
-      case QRErrorCorrectionLevel.H :
-        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
-      default :
-        return undefined;
-      }
-    };
-
-    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
-
-      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
-
-      if (typeof rsBlock == 'undefined') {
-        throw new Error('bad rs block @ typeNumber:' + typeNumber +
-            '/errorCorrectionLevel:' + errorCorrectionLevel);
-      }
-
-      var length = rsBlock.length / 3;
-
-      var list = new Array();
-
-      for (var i = 0; i < length; i += 1) {
-
-        var count = rsBlock[i * 3 + 0];
-        var totalCount = rsBlock[i * 3 + 1];
-        var dataCount = rsBlock[i * 3 + 2];
-
-        for (var j = 0; j < count; j += 1) {
-          list.push(qrRSBlock(totalCount, dataCount) );
-        }
-      }
-
-      return list;
-    };
-
-    return _this;
-  }();
-
-  var qrBitBuffer = function() {
-
-    var _buffer = new Array();
-    var _length = 0;
-
-    var _this = {};
-
-    _this.getBuffer = function() {
-      return _buffer;
-    };
-
-    _this.getAt = function(index) {
-      var bufIndex = Math.floor(index / 8);
-      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
-    };
-
-    _this.put = function(num, length) {
-      for (var i = 0; i < length; i += 1) {
-        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
-      }
-    };
-
-    _this.getLengthInBits = function() {
-      return _length;
-    };
-
-    _this.putBit = function(bit) {
-
-      var bufIndex = Math.floor(_length / 8);
-      if (_buffer.length <= bufIndex) {
-        _buffer.push(0);
-      }
-
-      if (bit) {
-        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
-      }
-
-      _length += 1;
-    };
-
-    return _this;
-  };
-
-  var qrNumber = function(data) {
-
-    var _mode = QRMode.MODE_NUMBER;
-    var _data = data;
-
-    var _this = {};
-
-    _this.getMode = function() {
-      return _mode;
-    };
-
-    _this.getLength = function(buffer) {
-      return _data.length;
-    };
-
-    _this.write = function(buffer) {
-
-      var data = _data;
-
-      var i = 0;
-
-      while (i + 2 < data.length) {
-        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
-        i += 3;
-      }
-
-      if (i < data.length) {
-        if (data.length - i == 1) {
-          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
-        } else if (data.length - i == 2) {
-          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
-        }
-      }
-    };
-
-    var strToNum = function(s) {
-      var num = 0;
-      for (var i = 0; i < s.length; i += 1) {
-        num = num * 10 + chatToNum(s.charAt(i) );
-      }
-      return num;
-    };
-
-    var chatToNum = function(c) {
-      if ('0' <= c && c <= '9') {
-        return c.charCodeAt(0) - '0'.charCodeAt(0);
-      }
-      throw 'illegal char :' + c;
-    };
-
-    return _this;
-  };
-
-  var qrAlphaNum = function(data) {
-
-    var _mode = QRMode.MODE_ALPHA_NUM;
-    var _data = data;
-
-    var _this = {};
-
-    _this.getMode = function() {
-      return _mode;
-    };
-
-    _this.getLength = function(buffer) {
-      return _data.length;
-    };
-
-    _this.write = function(buffer) {
-
-      var s = _data;
-
-      var i = 0;
-
-      while (i + 1 < s.length) {
-        buffer.put(
-          getCode(s.charAt(i) ) * 45 +
-          getCode(s.charAt(i + 1) ), 11);
-        i += 2;
-      }
-
-      if (i < s.length) {
-        buffer.put(getCode(s.charAt(i) ), 6);
-      }
-    };
-
-    var getCode = function(c) {
-
-      if ('0' <= c && c <= '9') {
-        return c.charCodeAt(0) - '0'.charCodeAt(0);
-      } else if ('A' <= c && c <= 'Z') {
-        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
-      } else {
-        switch (c) {
-        case ' ' : return 36;
-        case '$' : return 37;
-        case '%' : return 38;
-        case '*' : return 39;
-        case '+' : return 40;
-        case '-' : return 41;
-        case '.' : return 42;
-        case '/' : return 43;
-        case ':' : return 44;
-        default :
-          throw 'illegal char :' + c;
-        }
-      }
-    };
-
-    return _this;
-  };
-
-  var qr8BitByte = function(data) {
-
-    var _mode = QRMode.MODE_8BIT_BYTE;
-    var _data = data;
-    var _bytes = qrcode.stringToBytes(data);
-
-    var _this = {};
-
-    _this.getMode = function() {
-      return _mode;
-    };
-
-    _this.getLength = function(buffer) {
-      return _bytes.length;
-    };
-
-    _this.write = function(buffer) {
-      for (var i = 0; i < _bytes.length; i += 1) {
-        buffer.put(_bytes[i], 8);
-      }
-    };
-
-    return _this;
-  };
-
-  var qrKanji = function(data) {
-    var _mode = QRMode.MODE_KANJI;
-    var _data = data;
-    var _this = {};
-    _this.getMode = function() { return _mode; };
-    _this.getLength = function(buffer) { return 0; };
-    _this.write = function(buffer) {};
-    return _this;
-  };
-
-  return qrcode;
-}();
-    </script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -1445,19 +146,6 @@ var qrcode = function() {
             color: white !important; 
             border-color: white !important;
             animation: red-flash 0.8s infinite; 
-        }
-
-        .table-btn.qr-order-alert {
-            background-color: #8e44ad !important;
-            color: white !important;
-            border-color: #f1c40f !important;
-            animation: purple-flash 0.8s infinite;
-        }
-
-        @keyframes purple-flash {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.7); }
-            50% { transform: scale(1.06); box-shadow: 0 0 10px 5px rgba(142, 68, 173, 0.4); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); }
         }
 
         @keyframes pulse {
@@ -1712,7 +400,7 @@ var qrcode = function() {
             align-items: center;
         }
         .form-group label { width: 85px; font-size: 0.75rem; color: #bbb; }
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, .form-group select {
             flex: 1;
             background-color: #333;
             border: 1px solid var(--border-color);
@@ -1720,7 +408,6 @@ var qrcode = function() {
             padding: 5px;
             border-radius: 4px;
             font-size: 0.78rem;
-            font-family: inherit;
         }
         .btn-add-item {
             background-color: var(--success-color);
@@ -1815,10 +502,6 @@ var qrcode = function() {
             text-shadow: 0 0 4px rgba(243, 156, 18, 0.4);
         }
 
-        .qr-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-        .qr-cell { background:#1a1a1a; border-radius:6px; padding:8px; text-align:center; border:1px solid var(--border-color); }
-        .qr-cell canvas { border-radius: 4px; }
-
         @media (max-width: 800px) {
             body { overflow: hidden; height: 100vh; height: 100dvh; }
             .main-content { flex-direction: row; overflow: hidden; }
@@ -1841,9 +524,66 @@ var qrcode = function() {
             .ps-time-log { color: #000; border-top: 1px dashed #000; }
             .checkout-area { border-top: 1px dashed #000; margin-top: 4px; }
         }
+
+        /* ===== نظام الاشتراك السنوي (License Gate) ===== */
+        #license-gate-overlay {
+            position: fixed; inset: 0; z-index: 5000;
+            background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px; box-sizing: border-box;
+        }
+        #license-gate-overlay.hidden { display: none; }
+        .license-card {
+            background: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 20px; width: 100%; max-width: 340px;
+            text-align: center;
+        }
+        .license-card h2 { color: var(--accent-color); margin-top: 0; font-size: 1rem; }
+        .license-card p { font-size: 0.78rem; color: #ccc; }
+        #license-key-input {
+            width: 100%; box-sizing: border-box; padding: 10px; margin: 10px 0;
+            border-radius: 6px; border: 1px solid var(--border-color);
+            background: #1f1f1f; color: #fff; text-align: center;
+            font-size: 0.95rem; letter-spacing: 1px;
+        }
+        .license-btn {
+            width: 100%; padding: 10px; border: none; border-radius: 6px;
+            background: var(--accent-color); color: #000; font-weight: bold;
+            font-size: 0.85rem; cursor: pointer;
+        }
+        .license-btn:disabled { opacity: 0.6; }
+        #license-status-msg { font-size: 0.75rem; margin-top: 8px; min-height: 1em; }
+        #license-status-msg.error { color: var(--danger-color); }
+        #license-status-msg.ok { color: var(--success-color); }
+        #license-contact-box { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: none; }
+        #license-contact-box p { margin: 0 0 6px 0; font-size: 0.72rem; color: #aaa; }
+        #license-contact-box a {
+            display: inline-block; margin: 3px 4px; padding: 7px 12px; border-radius: 6px;
+            font-size: 0.75rem; text-decoration: none; font-weight: bold;
+        }
+        #license-contact-box a.whatsapp { background: #25D366; color: #000; }
+        #license-contact-box a.instagram { background: #E1306C; color: #fff; }
+        #license-contact-box a.website { background: #3498db; color: #fff; }
+        #license-expiry-banner {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 4000;
+            background: var(--danger-color); color: #fff; text-align: center;
+            font-size: 0.72rem; padding: 4px; display: none;
+        }
     </style>
 </head>
 <body>
+
+    <div id="license-gate-overlay" class="hidden">
+        <div class="license-card">
+            <h2>🎟️ تفعيل الاشتراك السنوي</h2>
+            <p>هذا الجهاز يحتاج مفتاح اشتراك صالح لتشغيل برنامج كيمز كوفي.</p>
+            <input type="text" id="license-key-input" placeholder="KIMS-XXXX-XXXX-XXXX" autocomplete="off" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+            <button class="license-btn" id="license-verify-btn" onclick="submitLicenseKey()">تفعيل</button>
+            <p id="license-status-msg"></p>
+            <div id="license-contact-box"></div>
+        </div>
+    </div>
+    <div id="license-expiry-banner"></div>
 
     <div class="app-header">
         <div class="logo-area">
@@ -1855,15 +595,12 @@ var qrcode = function() {
                 </svg>
             </div>
             <div class="brand-name">
-                <h1 id="cafe-name-header">كيمز كوفي | GAME'S COFFEE</h1>
+                <h1>كيمز كوفي | GAME'S COFFEE</h1>
                 <p>نظام إدارة المبيعات والصالة v9.0</p>
             </div>
         </div>
         <div class="header-actions">
             <div id="network-indicator" class="network-status status-online">متصل</div>
-            <button class="btn-settings" id="btn-qr-orders" onclick="openQrOrdersModal()" style="position:relative;">🔔 طلبات QR
-                <span id="qr-orders-badge" style="position:absolute; top:-6px; left:-6px; background:var(--danger-color); color:#fff; border-radius:50%; width:18px; height:18px; font-size:0.62rem; display:none; align-items:center; justify-content:center; font-weight:bold;">0</span>
-            </button>
             <button class="btn-settings" id="btn-printer-settings" onclick="openPrinterSettingsModal()">🖨️ الطابعة</button>
             <button class="btn-settings" onclick="openSettingsWithPin()">⚙️ الإعدادات</button>
         </div>
@@ -1929,10 +666,7 @@ var qrcode = function() {
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-stats', this)">📊 الأكثر مبيعاً</button>
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-lottery', this)">🎟️ قرعة الفواتير</button>
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-connections', this)">📡 تلغرام وواتساب</button>
-                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-qr-firebase', this)">🔗 QR وFirebase</button>
-                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-qr-tables', this)">📱 QR الطاولات</button>
                     <button class="settings-tab-btn" onclick="switchSettingsTab('tab-admins', this)">👥 الأدمنية</button>
-                    <button class="settings-tab-btn" onclick="switchSettingsTab('tab-cashiers', this)">🧑‍💼 الكاشير</button>
                 </div>
 
                 <div id="tab-pin" class="tab-panel active">
@@ -2004,7 +738,7 @@ var qrcode = function() {
 
                 <div id="tab-achievements" class="tab-panel">
                     <div class="settings-section">
-                        <h3 id="achievements-panel-title">🏆 لوحة إنجازات وتحديات كيمز كوفي</h3>
+                        <h3>🏆 لوحة إنجازات وتحديات كيمز كوفي</h3>
                         <p style="font-size: 0.72rem; color: #ccc; margin-top:0;">إنجازات الصالة يتم تحديثها تلقائياً مع مبيعاتك المستمرة:</p>
                         
                         <div class="achievement-card">
@@ -2059,20 +793,6 @@ var qrcode = function() {
                 </div>
 
                 <div id="tab-general" class="tab-panel">
-                    <div class="settings-section">
-                        <h3>☕ اسم الكوفي</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">هذا الاسم يظهر بعنوان البرنامج، الفاتورة المطبوعة، ورسائل تلغرام وواتساب.</p>
-                        <div class="form-group">
-                            <label>الاسم بالعربي:</label>
-                            <input type="text" id="setting-cafe-name" maxlength="40">
-                            <div style="margin-top: 8px;">
-                                <label>الاسم بالإنكليزي:</label>
-                                <input type="text" id="setting-cafe-name-en" maxlength="40">
-                            </div>
-                        </div>
-                        <button class="btn-add-item" onclick="updateCafeName()">تحديث اسم الكوفي</button>
-                    </div>
-
                     <div class="settings-section">
                         <h3>🎮 سعر ساعة الـ PS4</h3>
                         <div class="form-group">
@@ -2168,64 +888,6 @@ var qrcode = function() {
                     </div>
                 </div>
 
-                <div id="tab-qr-firebase" class="tab-panel">
-                    <div class="settings-section">
-                        <h3>🔗 ربط Firebase (لمزامنة طلبات QR لحظياً)</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">
-                            سوّي مشروع مجاني بـ <strong>Firebase Realtime Database</strong> (5 دقائق فقط)، وبعدها انسخ كود الإعدادات (firebaseConfig) من صفحة Project settings والصقه هون بالضبط متل ما هو:
-                        </p>
-                        <div class="form-group">
-                            <textarea id="firebase-config-input" rows="6" placeholder='{ "apiKey": "...", "authDomain": "...", "databaseURL": "...", "projectId": "...", ... }'></textarea>
-                        </div>
-                        <button class="btn-add-item" style="background-color: #e67e22;" onclick="saveFirebaseConfig()">💾 حفظ الإعدادات والاتصال</button>
-                        <div class="form-group" style="margin-top: 8px;">
-                            <label>الحالة:</label>
-                            <span id="firebase-status-text" style="font-weight:bold; color: var(--danger-color);">❌ غير متصل</span>
-                        </div>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>🌐 رابط الموقع (لتوليد رموز QR)</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">لازم ترفع ملفي <code>index.html</code> و <code>menu.html</code> سوا بنفس المضيف (مثال: GitHub Pages) وتحط رابط المضيف هون بالضبط بدون / بالنهاية:</p>
-                        <div class="form-group">
-                            <label>الرابط:</label>
-                            <input type="text" id="site-base-url-input" placeholder="https://username.github.io/cafe">
-                        </div>
-                        <button class="btn-add-item" style="background-color: #2980b9;" onclick="saveSiteBaseUrl()">💾 حفظ الرابط</button>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>🎁 كود الخصم المتنقل (عبر QR)</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">كود عشوائي واحد يتفعّل لطاولة وحدة بالعشوائي، صالح 5 ساعات وللاستخدام مرة وحدة فقط. إذا محد استخدمه، ينحذف ويتحول تلقائياً لطاولة ثانية بشكل دائم.</p>
-                        <div class="form-group">
-                            <label>قيمة الخصم:</label>
-                            <input type="number" id="qr-discount-amount-input" step="250" placeholder="2000">
-                        </div>
-                        <button class="btn-add-item" style="background-color: #2980b9; margin-bottom: 8px;" onclick="saveQrDiscountAmount()">💾 حفظ قيمة الخصم</button>
-                        <div id="discount-code-status" style="background:#1a1a1a; padding:8px; border-radius:5px; font-size:0.75rem; line-height:1.8;">لا يوجد كود نشط بعد.</div>
-                        <button class="btn-add-item" style="background-color: #c0392b; margin-top: 8px;" onclick="manualRegenerateDiscountCode()">🎲 توليد كود جديد الآن يدوياً</button>
-                    </div>
-
-                    <div class="settings-section">
-                        <h3>📍 نطاق موقع المحل (لمنع الطلبات من خارج الكافيه)</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">حدد موقع المحل مرة وحدة وأنت واقف بداخله، وأي زبون يسوي سكان لـ QR وهو أبعد من النطاق المحدد ما راح يقدر يفتح المنيو أو يطلب. لازم تسمح للمتصفح بالوصول لموقعك عند الضغط على الزر.</p>
-                        <div class="form-group">
-                            <label>النطاق المسموح (م):</label>
-                            <input type="number" id="cafe-geofence-radius-input" step="50" placeholder="1000">
-                        </div>
-                        <button class="btn-add-item" style="background-color: #16a085;" onclick="captureCafeLocation()">📍 تحديد موقع المحل الحالي وحفظه</button>
-                        <div id="cafe-location-status" style="background:#1a1a1a; padding:8px; border-radius:5px; font-size:0.75rem; line-height:1.8; margin-top:8px;">لم يتم تحديد الموقع بعد — أي زبون بأي مكان يقدر يفتح المنيو حالياً.</div>
-                    </div>
-                </div>
-
-                <div id="tab-qr-tables" class="tab-panel">
-                    <div class="settings-section">
-                        <h3>📱 رموز QR الخاصة بكل طاولة</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">كل طاولة إلها رمز QR مختلف. الزبون يسوي سكان ويفتح منيو تفاعلي من موبايله، يقدر يطلب مباشرة (يوصل تلقائياً لهذا البرنامج) ويستخدم كود الخصم إذا كان مفعّل لطاولته. اطبع كل رمز وحطه على طاولته.</p>
-                        <div class="qr-grid" id="qr-tables-grid"></div>
-                    </div>
-                </div>
-
                 <div id="tab-admins" class="tab-panel">
                     <div class="settings-section">
                         <h3>👥 إدارة الأدمنية</h3>
@@ -2247,27 +909,6 @@ var qrcode = function() {
                     </div>
                 </div>
 
-                <div id="tab-cashiers" class="tab-panel">
-                    <div class="settings-section">
-                        <h3>🧑‍💼 إدارة الكاشير</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">أضف كاشير باسمه ورمزه الخاص. عند استلام أي حساب (منفرد أو تثبيت طاولة كامل) رح يُطلب من الكاشير إدخال رمزه، وبعدها اسمه ينضاف تلقائياً بتقرير الفاتورة اللي يوصلك بتلغرام/واتساب. هذا الرمز مختلف تماماً عن رمز الأدمن، والكاشير ما يكدر يفتح الإعدادات فيه.</p>
-
-                        <div class="form-group">
-                            <label>اسم الكاشير:</label>
-                            <input type="text" id="new-cashier-name" placeholder="مثال: علي">
-                        </div>
-                        <div class="form-group">
-                            <label>الرمز الخاص:</label>
-                            <input type="password" id="new-cashier-pin" placeholder="4 أرقام أو أكثر">
-                        </div>
-                        <button class="btn-add-item" onclick="addNewCashier()">➕ إضافة كاشير جديد</button>
-
-                        <h3 style="margin-top: 14px;">📋 قائمة الكاشيرية الحاليين</h3>
-                        <div class="settings-items-list" id="cashiers-list-container">
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -2285,6 +926,17 @@ var qrcode = function() {
                     <div class="form-group">
                         <label>حالة الطابعة:</label>
                         <span id="printer-status-text" style="font-weight:bold; color: var(--danger-color);">❌ غير مقترنة بعد</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label>طريقة الطباعة:</label>
+                        <select id="setting-printer-mode" onchange="updatePrinterModeSetting(this.value)">
+                            <option value="auto">تلقائي (طباعة مباشرة، ولو ما نجحت تفتح نافذة الطباعة العادية)</option>
+                            <option value="system">نافذة الطباعة العادية دائماً (موصى به مع تطبيق RawBT على أندرويد)</option>
+                        </select>
+                        <p style="font-size: 0.66rem; color: #ccc; margin: 4px 0 0 0;">
+                            إذا نصبت التطبيق من گوگل بلاي وصار عندك طابعات تتأخر أو ما تطبع مباشرة على بعض الأجهزة، ثبّت تطبيق مجاني اسمه <b>RawBT</b> من گوگل بلاي على نفس التابلت، وخلي هذا الخيار على "نافذة الطباعة العادية" — رح يطبع عبره بثبات أكثر من الطباعة المباشرة.
+                        </p>
                     </div>
 
                     <div class="form-group">
@@ -2314,27 +966,198 @@ var qrcode = function() {
                         </select>
                     </div>
 
-                    <button class="btn-add-item" style="background-color: #2980b9;" onclick="connectPrinterManually()">🔗 إقران / تغيير الطابعة</button>
-                    <p id="printer-compat-warning" style="font-size: 0.68rem; color: var(--danger-color); margin-top: 8px; margin-bottom: 0; display:none;">⚠️ متصفح Chrome عندك قديم وما يدعم الطباعة المباشرة. حدّثه من متجر Google Play (يحتاج Chrome 138 أو أحدث) وحاول مرة ثانية.</p>
+                    <button class="btn-add-item" id="btn-connect-bt" style="background-color: #2980b9;" onclick="connectPrinterBluetooth()">📶 إقران عبر بلوتوث</button>
+                    <button class="btn-add-item" id="btn-connect-usb" style="background-color: #16a085; margin-top: 4px;" onclick="connectPrinterUSB()">🔌 إقران عبر USB</button>
+                    <p style="font-size: 0.66rem; color: #ccc; margin: 6px 0 0 0;">اختر الطريقة المناسبة لطابعتك: بلوتوث إذا كانت لاسلكية ومقرونة مسبقاً من إعدادات الجهاز، أو USB إذا كانت موصولة بسلك.</p>
+                    <p id="printer-compat-warning" style="font-size: 0.68rem; color: var(--danger-color); margin-top: 8px; margin-bottom: 0; display:none;">⚠️ متصفح Chrome عندك قديم وما يدعم أي طريقة طباعة مباشرة (لا بلوتوث ولا USB). حدّثه من متجر Google Play لآخر إصدار وحاول مرة ثانية، أو استخدم "نافذة الطباعة العادية" مع تطبيق RawBT.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="qr-orders-modal" class="modal">
-        <div class="modal-content" style="max-width: 480px;">
-            <div class="modal-header">
-                <h2>🔔 طلبات QR الواردة</h2>
-                <span class="close-modal" onclick="closeQrOrdersModal()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p style="font-size: 0.72rem; color: #ccc; margin-top: 0;">راجع كل طلب ووافق عليه ليضاف مباشرة لحساب الطاولة، أو ارفضه إذا كان فيه خطأ أو ما تريد تنفيذه.</p>
-                <div id="qr-orders-list-container" style="display:flex; flex-direction:column; gap:10px;"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
+        // ============ نظام الاشتراك السنوي (License Gate) ============
+        // غيّر هذا الرابط لرابط سيرفر التفعيل بعد ما تنشره (شوف مجلد kims-license-server)
+        const LICENSE_SERVER_URL = "https://admin-casher.onrender.com";
+        const LICENSE_KEY_STORAGE = 'kims_license_key_v1';
+        const DEVICE_ID_STORAGE = 'kims_device_id_v1';
+        const LICENSE_EXPIRES_STORAGE = 'kims_license_expires_at_v1';
+        const LICENSE_CUSTOMER_STORAGE = 'kims_license_customer_v1';
+        const LICENSE_MAX_SEEN_TIME_STORAGE = 'kims_license_max_seen_time_v1';
+        const CLOCK_TOLERANCE_MS = 2 * 60 * 1000; // هامش دقيقتين لأي فرق ساعة طبيعي (منطقة زمنية، توقيت صيفي..)
+
+        function getOrCreateDeviceId() {
+            let id = localStorage.getItem(DEVICE_ID_STORAGE);
+            if (!id) {
+                id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+                localStorage.setItem(DEVICE_ID_STORAGE, id);
+            }
+            return id;
+        }
+
+        async function verifyLicenseWithServer(key, deviceId) {
+            const res = await fetch(`${LICENSE_SERVER_URL}/api/license/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key, deviceId })
+            });
+            return res.json();
+        }
+
+        // معلومات التواصل تبع صاحب البرنامج (واتساب/انستغرام/رابط) - تنجلب من نفس سيرفر التفعيل
+        // وتظهر بشاشة القفل حتى يگدر صاحب المحل يتواصل ياك بسهولة لو احتاج تفعيل أو تجديد
+        let cachedContactInfo = null;
+        function renderContactBox(info) {
+            const box = document.getElementById('license-contact-box');
+            if (!box) return;
+            if (!info || (!info.whatsapp && !info.instagram && !info.website)) {
+                box.style.display = 'none';
+                return;
+            }
+            let html = '<p>تحتاج مساعدة أو تفعيل/تجديد الاشتراك؟ تواصل وياي:</p>';
+            if (info.whatsapp) html += `<a class="whatsapp" href="https://wa.me/${info.whatsapp}" target="_blank" rel="noopener">📱 واتساب</a>`;
+            if (info.instagram) html += `<a class="instagram" href="${info.instagram}" target="_blank" rel="noopener">📸 انستغرام</a>`;
+            if (info.website) html += `<a class="website" href="${info.website}" target="_blank" rel="noopener">🔗 رابط</a>`;
+            box.innerHTML = html;
+            box.style.display = 'block';
+        }
+        async function loadContactInfoIntoGate() {
+            if (cachedContactInfo) { renderContactBox(cachedContactInfo); return; }
+            try {
+                const res = await fetch(`${LICENSE_SERVER_URL}/api/contact-info`);
+                cachedContactInfo = await res.json();
+                renderContactBox(cachedContactInfo);
+            } catch (e) { /* ما مشكلة إذا ما توفر نت، بس ما تظهر معلومات التواصل هذي المرة */ }
+        }
+
+        function showLicenseGate(msg, isError) {
+            document.getElementById('license-gate-overlay').classList.remove('hidden');
+            const msgEl = document.getElementById('license-status-msg');
+            if (msg) { msgEl.textContent = msg; msgEl.className = isError ? 'error' : ''; }
+            loadContactInfoIntoGate();
+        }
+        function hideLicenseGate() {
+            document.getElementById('license-gate-overlay').classList.add('hidden');
+        }
+
+        function updateExpiryBanner(expiresAt) {
+            const banner = document.getElementById('license-expiry-banner');
+            const daysLeft = Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+            if (daysLeft <= 14 && daysLeft > 0) {
+                banner.style.display = 'block';
+                banner.textContent = `⚠️ اشتراكك ينتهي خلال ${daysLeft} يوم — تواصل لتجديد الاشتراك السنوي.`;
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function lockAppWithReason(reason) {
+            const messages = {
+                not_found: 'مفتاح الاشتراك غير صحيح.',
+                revoked: 'تم إلغاء هذا الاشتراك. الرجاء التواصل مع الدعم.',
+                expired: 'انتهت مدة الاشتراك السنوي. الرجاء التواصل لتجديد الاشتراك.',
+                device_mismatch: 'هذا المفتاح مستخدم على جهاز آخر. تواصل مع الدعم لفك الربط.',
+                clock_tampered: 'تم رصد تغيير بتاريخ ووقت الجهاز. اضبط التاريخ والوقت الصحيح ثم أعد فتح البرنامج.'
+            };
+            showLicenseGate(messages[reason] || 'تعذر تفعيل الاشتراك.', true);
+        }
+
+        // يمنع خداع النظام بإرجاع ساعة/تاريخ الجهاز للخلف للتحايل على انتهاء الاشتراك.
+        // يحفظ أعلى وقت شافه الجهاز، فإذا رجع الوقت الحالي للخلف بشكل واضح نعتبرها محاولة تلاعب.
+        function isClockTampered() {
+            const now = Date.now();
+            const maxSeen = parseInt(localStorage.getItem(LICENSE_MAX_SEEN_TIME_STORAGE)) || 0;
+            if (maxSeen > 0 && now < (maxSeen - CLOCK_TOLERANCE_MS)) {
+                return true;
+            }
+            localStorage.setItem(LICENSE_MAX_SEEN_TIME_STORAGE, String(Math.max(now, maxSeen)));
+            return false;
+        }
+
+        // يشتغل بكل فتح للبرنامج، وبالخلفية كل فترة، وكل ما يرجع النت.
+        // الفحص الأساسي محلي بالكامل (يقفل حتى بدون نت إذا خلص الاشتراك)،
+        // والاتصال بالسيرفر يصير بالخلفية بصمت فقط لتحديث تاريخ الانتهاء تلقائياً
+        // (إذا جدد صاحب المحل الاشتراك) أو لاكتشاف إلغاء مبكر - بدون ما يطلب من المستخدم إدخال المفتاح مرة ثانية.
+        async function checkLicenseStatus() {
+            const key = localStorage.getItem(LICENSE_KEY_STORAGE);
+            if (!key) { showLicenseGate('الرجاء إدخال مفتاح الاشتراك لتفعيل البرنامج (مرة واحدة فقط).'); return; }
+
+            if (isClockTampered()) { lockAppWithReason('clock_tampered'); return; }
+
+            const cachedExpiresAt = parseInt(localStorage.getItem(LICENSE_EXPIRES_STORAGE)) || 0;
+            const now = Date.now();
+
+            // القفل الأساسي: قرار محلي بحت، يشتغل حتى لو الجهاز مقطوع عن النت تماماً.
+            if (cachedExpiresAt > 0 && now > cachedExpiresAt) {
+                lockAppWithReason('expired');
+            } else if (cachedExpiresAt > 0) {
+                hideLicenseGate();
+                updateExpiryBanner(cachedExpiresAt);
+            }
+            // ملاحظة: إذا ما عندنا cachedExpiresAt أبداً (حالة نادرة، مثلاً أول تفعيل ما اكتمل)
+            // نترك القرار للتحقق مع السيرفر أدناه.
+
+            // مزامنة صامتة بالخلفية (بدون ما تقفل الشغل الحالي أو تطلب إدخال المفتاح):
+            // تحدّث تاريخ الانتهاء تلقائياً لو صاحب المحل جدد، أو تقفل فوراً لو تم إلغاء الاشتراك.
+            if (navigator.onLine) {
+                try {
+                    const deviceId = getOrCreateDeviceId();
+                    const result = await verifyLicenseWithServer(key, deviceId);
+                    if (result.valid) {
+                        localStorage.setItem(LICENSE_EXPIRES_STORAGE, result.expiresAt);
+                        if (result.customerName) localStorage.setItem(LICENSE_CUSTOMER_STORAGE, result.customerName);
+                        if (Date.now() <= result.expiresAt) {
+                            hideLicenseGate();
+                            updateExpiryBanner(result.expiresAt);
+                        }
+                    } else if (result.reason === 'revoked' || result.reason === 'not_found' || result.reason === 'device_mismatch') {
+                        // إلغاء أو خطأ بالمفتاح نكتشفه فقط أونلاين - نقفل فوراً بمجرد ما نعرف
+                        lockAppWithReason(result.reason);
+                    }
+                    // ملاحظة: result.reason === 'expired' من السيرفر لا يضيف شي جديد، القرار المحلي أعلاه يكفي.
+                } catch (err) {
+                    console.warn('تعذرت المزامنة مع سيرفر التفعيل (يبقى التطبيق يعتمد على آخر بيانات محفوظة محلياً):', err);
+                }
+            } else if (!cachedExpiresAt) {
+                showLicenseGate('يحتاج البرنامج اتصال بالإنترنت للتفعيل أول مرة.', true);
+            }
+        }
+
+        async function submitLicenseKey() {
+            const input = document.getElementById('license-key-input');
+            const key = input.value.trim().toUpperCase();
+            const msgEl = document.getElementById('license-status-msg');
+            const btn = document.getElementById('license-verify-btn');
+            if (!key) { msgEl.textContent = 'اكتب مفتاح الاشتراك.'; msgEl.className = 'error'; return; }
+            if (!navigator.onLine) { msgEl.textContent = 'تحتاج اتصال بالإنترنت للتفعيل أول مرة فقط.'; msgEl.className = 'error'; return; }
+
+            btn.disabled = true; msgEl.textContent = 'جاري التحقق...'; msgEl.className = '';
+            try {
+                const deviceId = getOrCreateDeviceId();
+                const result = await verifyLicenseWithServer(key, deviceId);
+                if (result.valid) {
+                    localStorage.setItem(LICENSE_KEY_STORAGE, key);
+                    localStorage.setItem(LICENSE_EXPIRES_STORAGE, result.expiresAt);
+                    if (result.customerName) localStorage.setItem(LICENSE_CUSTOMER_STORAGE, result.customerName);
+                    localStorage.setItem(LICENSE_MAX_SEEN_TIME_STORAGE, String(Date.now()));
+                    msgEl.textContent = 'تم التفعيل بنجاح ✅ (ما رح يطلب المفتاح بعدها)';
+                    msgEl.className = 'ok';
+                    setTimeout(() => { hideLicenseGate(); updateExpiryBanner(result.expiresAt); }, 600);
+                } else {
+                    lockAppWithReason(result.reason);
+                }
+            } catch (err) {
+                msgEl.textContent = 'تعذر الاتصال بسيرفر التفعيل. تأكد من رابط السيرفر وحاول مرة ثانية.';
+                msgEl.className = 'error';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        window.addEventListener('online', checkLicenseStatus);
+        setInterval(checkLicenseStatus, 60 * 60 * 1000); // فحص محلي + مزامنة صامتة كل ساعة
+        // ============ نهاية نظام الاشتراك السنوي ============
+
         // إعدادات تلغرام وواتساب ديناميكية (قابلة للتعديل من تبويب الإعدادات "📡 تلغرام وواتساب" بدون لمس الكود)
         const DEFAULT_TELEGRAM_TOKEN = "8777588307:AAG0Oy2IcQ-wWzEGZFBNlUK5WFCQT_q4q3s";
         const DEFAULT_TELEGRAM_CHAT_ID = "1237009798";
@@ -2373,7 +1196,7 @@ var qrcode = function() {
         }
 
         function sendTestConnectionMessage() {
-            const msg = `✅ رسالة تجريبية من نظام ${cafeName} - الربط شغال تمام!`;
+            const msg = '✅ رسالة تجريبية من نظام كيمز كوفي - الربط شغال تمام!';
             pendingInvoices.push(msg);
             saveToStorage();
             processPendingInvoices();
@@ -2467,74 +1290,6 @@ var qrcode = function() {
         }
         // ============ نهاية إدارة الأدمنية ============
 
-        // ============ إدارة الكاشير ============
-        function renderCashiersList() {
-            const container = document.getElementById('cashiers-list-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (cashiersList.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#888; font-size:0.75rem; padding:10px;">ما في كاشيرية مسجلين بعد. طالما القائمة فاضية، الاستلام يشتغل عادي بدون طلب رمز كاشير.</p>';
-                return;
-            }
-
-            cashiersList.forEach(cashier => {
-                const row = document.createElement('div');
-                row.className = 'settings-item-row';
-                row.innerHTML = `
-                    <div class="row-info">
-                        <strong>${cashier.name}</strong>
-                        <span class="row-cat">الرمز: ${'•'.repeat(cashier.pin.length)}</span>
-                    </div>
-                    <div class="row-actions">
-                        <button class="btn-row-delete" onclick="deleteCashier('${cashier.id}')">🗑️ حذف</button>
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-        }
-
-        function addNewCashier() {
-            const name = document.getElementById('new-cashier-name').value.trim();
-            const pin = document.getElementById('new-cashier-pin').value.trim();
-
-            if (!name || !pin) {
-                alert('عبّي اسم الكاشير والرمز الخاص فيه!');
-                return;
-            }
-            if (pin.length < 4) {
-                alert('من أجل الأمان، الرمز لازم يكون 4 خانات أو أكثر!');
-                return;
-            }
-            if (getCashierByPin(pin)) {
-                alert('هذا الرمز مستخدم مسبقاً من كاشير ثاني! اختر رمز مختلف.');
-                return;
-            }
-
-            cashiersList.push({ id: String(new Date().getTime()), name, pin });
-            saveToStorage();
-
-            document.getElementById('new-cashier-name').value = '';
-            document.getElementById('new-cashier-pin').value = '';
-
-            renderCashiersList();
-            alert(`تمت إضافة الكاشير "${name}" بنجاح! ✅`);
-        }
-
-        function deleteCashier(id) {
-            const cashier = cashiersList.find(c => c.id === id);
-            if (!cashier) return;
-
-            if (confirm(`هل تريد حذف الكاشير "${cashier.name}"؟`)) {
-                cashiersList = cashiersList.filter(c => c.id !== id);
-                saveToStorage();
-                renderCashiersList();
-            }
-        }
-        // ============ نهاية إدارة الكاشير ============
-
-        let cafeName = localStorage.getItem('cafe_name_v9') || 'كيمز كوفي';
-        let cafeNameEn = localStorage.getItem('cafe_name_en_v9') || "GAME'S COFFEE";
         let totalTables = parseInt(localStorage.getItem('cafe_total_tables_v9')) || 15;
         let activeTable = 1;
         let psPricePerHour = parseInt(localStorage.getItem('cafe_ps_price_v9')) || 2000;
@@ -2582,19 +1337,11 @@ var qrcode = function() {
         let productsList = JSON.parse(localStorage.getItem('cafe_products_list_v9')) || defaultProducts;
         let systemPin = localStorage.getItem('cafe_system_pin_v9') || "66666";
         let adminsList = JSON.parse(localStorage.getItem('cafe_admins_list_v9')) || [];
-        let cashiersList = JSON.parse(localStorage.getItem('cafe_cashiers_list_v9')) || [];
-        // مجموع المبالغ اللي استلمها كل كاشير اليوم (id الكاشير => المبلغ)، يتصفر مع كل إرسال للتقرير اليومي
-        let cashierDailyTotals = JSON.parse(localStorage.getItem('cafe_cashier_daily_totals_v9')) || {};
 
         // يتحقق إذا الرمز المدخل يخص الرمز الرئيسي أو أي أدمن مسجل بالنظام
         function isValidAdminPin(pin) {
             if (pin === systemPin) return true;
             return adminsList.some(a => a.pin === pin);
-        }
-
-        // يرجع بيانات الكاشير صاحب هذا الرمز، أو null إذا الرمز غلط
-        function getCashierByPin(pin) {
-            return cashiersList.find(c => c.pin === pin) || null;
         }
         let customThemeColor = localStorage.getItem('cafe_custom_color_v9') || "#f39c12";
         let achievements = JSON.parse(localStorage.getItem('cafe_achievements_v9')) || defaultAchievements;
@@ -2659,27 +1406,6 @@ var qrcode = function() {
             lastWinner: null
         };
         if (!Array.isArray(invoiceLottery.invoices)) invoiceLottery.invoices = [];
-
-        // ============ إعدادات Firebase وربط QR (ميزة جديدة) ============
-        let firebaseConfig = null;
-        try {
-            firebaseConfig = JSON.parse(localStorage.getItem('cafe_firebase_config_v9') || 'null');
-        } catch(e) {
-            firebaseConfig = null;
-        }
-        let siteBaseUrl = localStorage.getItem('cafe_site_base_url_v9') || '';
-        let qrDiscountAmount = parseInt(localStorage.getItem('cafe_qr_discount_amount_v9')) || 2000;
-        let fbApp = null;
-        let fbDb = null;
-        let firebaseReady = false;
-        let currentDiscountCodeData = null;
-        let cafeLocation = null;
-        try {
-            cafeLocation = JSON.parse(localStorage.getItem('cafe_geofence_location_v9') || 'null');
-        } catch(e) {
-            cafeLocation = null;
-        }
-        // ============ نهاية إعدادات Firebase ============
 
         function applyThemeColor(color) {
             document.documentElement.style.setProperty('--accent-color', color);
@@ -2909,51 +1635,6 @@ var qrcode = function() {
             alert("تم إرسال التقرير الشهري وتصفيره بنجاح! 🗓️✨");
         }
 
-        function updateCafeName() {
-            const pin = prompt("أدخل الرمز السري لتغيير اسم الكوفي:");
-            if (pin === null) return;
-
-            if (!isValidAdminPin(pin)) {
-                alert("الرمز السري خاطئ! تم إلغاء العملية.");
-                return;
-            }
-
-            const newName = document.getElementById('setting-cafe-name').value.trim();
-            const newNameEn = document.getElementById('setting-cafe-name-en').value.trim();
-
-            if (!newName) {
-                alert("الرجاء إدخال الاسم بالعربي!");
-                return;
-            }
-
-            if (!newNameEn) {
-                alert("الرجاء إدخال الاسم بالإنكليزي!");
-                return;
-            }
-
-            cafeName = newName;
-            cafeNameEn = newNameEn;
-            localStorage.setItem('cafe_name_v9', cafeName);
-            localStorage.setItem('cafe_name_en_v9', cafeNameEn);
-            applyCafeName();
-            syncMenuToFirebase();
-            alert(`تم تحديث اسم الكوفي إلى "${cafeName} | ${cafeNameEn}" بنجاح! ✅`);
-        }
-
-        // يحدّث كل الأماكن اللي يظهر فيها اسم الكوفي بالواجهة (العنوان، الهيدر، لوحة الإنجازات)
-        function applyCafeName() {
-            document.title = `${cafeName} | نظام إدارة المبيعات الذكي`;
-
-            const headerEl = document.getElementById('cafe-name-header');
-            if (headerEl) headerEl.textContent = `${cafeName} | ${cafeNameEn}`;
-
-            const appleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-            if (appleMeta) appleMeta.setAttribute('content', cafeName);
-
-            const achievementsTitleEl = document.getElementById('achievements-panel-title');
-            if (achievementsTitleEl) achievementsTitleEl.textContent = `🏆 لوحة إنجازات وتحديات ${cafeName}`;
-        }
-
         function updatePs4Price() {
             const pin = prompt("أدخل الرمز السري لتغيير سعر ساعة الـ PS4:");
             if (pin === null) return;
@@ -2975,7 +1656,6 @@ var qrcode = function() {
             localStorage.setItem('cafe_ps_price_v9', psPricePerHour);
             saveToStorage();
             renderDynamicMenu();
-            syncMenuToFirebase();
             alert(`تم تحديث سعر ساعة الـ PS4 إلى ${psPricePerHour.toLocaleString()} د.ع بنجاح! ✅`);
         }
 
@@ -3037,8 +1717,6 @@ var qrcode = function() {
             saveToStorage();
             renderTablesBar();
             switchTable(activeTable);
-            syncMenuToFirebase();
-            renderTablesQrGrid();
             alert(`تم تحديث عدد الطاولات إلى ${totalTables} بنجاح! ✅`);
         }
 
@@ -3251,527 +1929,6 @@ var qrcode = function() {
         }
         // ============ نهاية نظام ترقيم الفواتير والقرعة ============
 
-        // ============ نظام Firebase وربط طلبات QR والكود المتنقل (ميزة جديدة) ============
-
-        function initFirebaseIfConfigured() {
-            if (!firebaseConfig) {
-                updateFirebaseStatusUI();
-                return;
-            }
-            try {
-                if (!fbApp) {
-                    fbApp = firebase.initializeApp(firebaseConfig);
-                    fbDb = firebase.database();
-                }
-                firebaseReady = true;
-                listenForLiveStateChanges();
-                listenForMenuChangesFromOtherDevices();
-                bootstrapMenuIfNeeded();
-                listenForIncomingOrders();
-                listenForDiscountCodeChanges();
-                syncCafeLocationToFirebase();
-                rotateDiscountCodeIfNeeded();
-                setInterval(rotateDiscountCodeIfNeeded, 60 * 1000);
-                updateFirebaseStatusUI();
-            } catch (e) {
-                console.error('فشل الاتصال بـ Firebase:', e);
-                firebaseReady = false;
-                updateFirebaseStatusUI();
-            }
-        }
-
-        function saveFirebaseConfig() {
-            const raw = document.getElementById('firebase-config-input').value.trim();
-            if (!raw) {
-                alert('الصق إعدادات Firebase أولاً!');
-                return;
-            }
-            try {
-                let cleaned = raw.replace(/^const\s+firebaseConfig\s*=\s*/, '').replace(/;\s*$/, '');
-                const parsed = new Function('return ' + cleaned)();
-                if (!parsed || !parsed.databaseURL) {
-                    alert('الإعدادات ناقصة! تأكد إنك نسخت كامل كود firebaseConfig من Firebase Console.');
-                    return;
-                }
-                firebaseConfig = parsed;
-                localStorage.setItem('cafe_firebase_config_v9', JSON.stringify(parsed));
-                alert('تم حفظ إعدادات Firebase! جاري الاتصال...');
-                initFirebaseIfConfigured();
-            } catch (e) {
-                console.error(e);
-                alert('تعذر قراءة الإعدادات، تأكد إنك ناسخ الكود صح من Firebase Console.');
-            }
-        }
-
-        function updateFirebaseStatusUI() {
-            const el = document.getElementById('firebase-status-text');
-            if (!el) return;
-            el.innerText = firebaseReady ? '✅ متصل بنجاح' : '❌ غير متصل';
-            el.style.color = firebaseReady ? 'var(--success-color)' : 'var(--danger-color)';
-        }
-
-        function saveSiteBaseUrl() {
-            let url = document.getElementById('site-base-url-input').value.trim();
-            if (url.endsWith('/')) url = url.slice(0, -1);
-            siteBaseUrl = url;
-            localStorage.setItem('cafe_site_base_url_v9', url);
-            alert('تم حفظ رابط الموقع! ✅');
-            renderTablesQrGrid();
-        }
-
-        function saveQrDiscountAmount() {
-            const val = parseInt(document.getElementById('qr-discount-amount-input').value);
-            if (isNaN(val) || val < 0) {
-                alert('قيمة غير صالحة!');
-                return;
-            }
-            qrDiscountAmount = val;
-            localStorage.setItem('cafe_qr_discount_amount_v9', val);
-            alert('تم حفظ قيمة خصم كود QR بنجاح! ✅');
-        }
-
-        function loadFirebaseSettingsUI() {
-            const cfgEl = document.getElementById('firebase-config-input');
-            const urlEl = document.getElementById('site-base-url-input');
-            const amtEl = document.getElementById('qr-discount-amount-input');
-            if (cfgEl && firebaseConfig) cfgEl.value = JSON.stringify(firebaseConfig, null, 2);
-            if (urlEl) urlEl.value = siteBaseUrl;
-            if (amtEl) amtEl.value = qrDiscountAmount;
-            updateFirebaseStatusUI();
-        }
-
-        // توليد كود عشوائي مكوّن من 5 خانات (أحرف وأرقام واضحة بدون التباس)
-        function generateRandomDiscountCode() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let code = '';
-            for (let i = 0; i < 5; i++) {
-                code += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return code;
-        }
-
-        // يتحقق كل دقيقة إذا الكود الحالي منتهي أو مستخدم أو غير موجود، ويولد وحد جديد لطاولة عشوائية تلقائياً
-        function rotateDiscountCodeIfNeeded() {
-            if (!firebaseReady) return;
-            const ref = fbDb.ref('discountCode');
-            ref.transaction(current => {
-                const now = Date.now();
-                if (!current || current.used || now >= current.expiresAt) {
-                    const newTable = Math.floor(Math.random() * totalTables) + 1;
-                    return {
-                        code: generateRandomDiscountCode(),
-                        table: newTable,
-                        createdAt: now,
-                        expiresAt: now + (5 * 60 * 60 * 1000),
-                        used: false,
-                        usedAt: null
-                    };
-                }
-                return current;
-            });
-        }
-
-        function listenForDiscountCodeChanges() {
-            if (!fbDb) return;
-            fbDb.ref('discountCode').on('value', snap => {
-                currentDiscountCodeData = snap.val();
-                renderDiscountCodeSettingsUI();
-            });
-        }
-
-        function manualRegenerateDiscountCode() {
-            const pin = prompt('أدخل الرمز السري لتوليد كود خصم جديد يدوياً:');
-            if (pin === null) return;
-            if (!isValidAdminPin(pin)) {
-                alert('الرمز السري خاطئ! تم إلغاء العملية.');
-                return;
-            }
-            if (!firebaseReady) {
-                alert('Firebase غير متصل! يرجى حفظ إعدادات Firebase أولاً.');
-                return;
-            }
-            const now = Date.now();
-            const newTable = Math.floor(Math.random() * totalTables) + 1;
-            fbDb.ref('discountCode').set({
-                code: generateRandomDiscountCode(),
-                table: newTable,
-                createdAt: now,
-                expiresAt: now + (5 * 60 * 60 * 1000),
-                used: false,
-                usedAt: null
-            });
-            alert('تم توليد كود خصم جديد بنجاح! 🎲');
-        }
-
-        function renderDiscountCodeSettingsUI() {
-            const el = document.getElementById('discount-code-status');
-            if (!el) return;
-
-            if (!firebaseReady) {
-                el.innerHTML = 'يرجى ربط Firebase أولاً من الأعلى عشان يشتغل كود الخصم المتنقل.';
-                return;
-            }
-            if (!currentDiscountCodeData) {
-                el.innerHTML = 'جاري توليد أول كود... انتظر لحظات أو حدّث الصفحة.';
-                return;
-            }
-
-            const d = currentDiscountCodeData;
-            const remainingMs = Math.max(0, d.expiresAt - Date.now());
-            const remH = Math.floor(remainingMs / 3600000);
-            const remM = Math.floor((remainingMs % 3600000) / 60000);
-
-            el.innerHTML = `
-                🎟️ الكود الحالي: <strong style="color:var(--accent-color);">${d.used ? '(تم استخدامه) ✅' : d.code}</strong><br>
-                📍 مخصص لـ: <strong>طاولة ${d.table}</strong><br>
-                ⏳ الوقت المتبقي: ${remH} س ${remM} د<br>
-                الحالة: ${d.used ? '✅ مستخدم — بانتظار الدورة الجديدة' : '⏳ فعّال حالياً'}
-            `;
-        }
-        setInterval(renderDiscountCodeSettingsUI, 30000);
-
-        // مزامنة المنيو (المنتجات + سعر PS4 + عدد الطاولات) لـ Firebase عشان صفحة القائمة تبع الزبون تكدر تعرضه
-        function syncMenuToFirebase() {
-            if (!firebaseReady) return;
-            fbDb.ref('menu').set({
-                products: productsList,
-                psPrice: psPricePerHour,
-                totalTables: totalTables,
-                cafeName: cafeName,
-                cafeNameEn: cafeNameEn,
-                updatedAt: Date.now()
-            });
-        }
-
-        // ترفع منيو هذا الجهاز فقط إذا ما كان أصلاً موجود منيو على Firebase (أول اتصال بالنظام)
-        // عشان جهاز جديد ما يمسح بيانات منيو صحيحة موجودة من جهاز ثاني سبقه بالمزامنة
-        function bootstrapMenuIfNeeded() {
-            if (!firebaseReady) return;
-            fbDb.ref('menu').once('value').then(snap => {
-                if (!snap.exists()) {
-                    syncMenuToFirebase();
-                }
-            });
-        }
-
-        // ============ نظام تحديد نطاق موقع المحل الجغرافي (Geofence) ============
-
-        // يحدد موقع المحل الحالي عبر GPS الجهاز ويحفظه محلياً وعلى Firebase مع النطاق المسموح بالمتر
-        function captureCafeLocation() {
-            const radiusInput = document.getElementById('cafe-geofence-radius-input').value;
-            const radius = parseInt(radiusInput) || 1000;
-
-            if (!('geolocation' in navigator)) {
-                alert('متصفحك ما يدعم تحديد الموقع الجغرافي.');
-                return;
-            }
-
-            const statusEl = document.getElementById('cafe-location-status');
-            if (statusEl) statusEl.innerText = '📍 جاري تحديد موقعك، انتظر لحظات...';
-
-            navigator.geolocation.getCurrentPosition(function(pos) {
-                cafeLocation = {
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    radiusMeters: radius,
-                    updatedAt: Date.now()
-                };
-                localStorage.setItem('cafe_geofence_location_v9', JSON.stringify(cafeLocation));
-                syncCafeLocationToFirebase();
-                renderCafeLocationStatus();
-                alert(`تم تحديد موقع المحل وحفظه بنجاح! ✅\nالنطاق المسموح: ${radius.toLocaleString()} متر حوالين المحل.`);
-            }, function(err) {
-                if (statusEl) statusEl.innerText = 'لم يتم تحديد الموقع بعد — أي زبون بأي مكان يقدر يفتح المنيو حالياً.';
-                alert('تعذر الحصول على موقعك. تأكد إنك سمحت للمتصفح بالوصول لموقعك (Location) وإن خدمة الـ GPS مفعّلة، وحاول مرة ثانية.');
-            }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
-        }
-
-        function syncCafeLocationToFirebase() {
-            if (!firebaseReady || !cafeLocation) return;
-            fbDb.ref('cafeLocation').set(cafeLocation);
-        }
-
-        function renderCafeLocationStatus() {
-            const el = document.getElementById('cafe-location-status');
-            const radiusInput = document.getElementById('cafe-geofence-radius-input');
-            if (radiusInput) radiusInput.value = cafeLocation ? cafeLocation.radiusMeters : 1000;
-            if (!el) return;
-            if (!cafeLocation) {
-                el.innerText = 'لم يتم تحديد الموقع بعد — أي زبون بأي مكان يقدر يفتح المنيو حالياً.';
-                return;
-            }
-            el.innerHTML = `📍 الموقع محفوظ (${cafeLocation.lat.toFixed(5)}, ${cafeLocation.lng.toFixed(5)})<br>🎯 النطاق المسموح: ${cafeLocation.radiusMeters.toLocaleString()} متر حوالين المحل.`;
-        }
-        // ============ نهاية نظام تحديد نطاق موقع المحل ============
-
-        // الاستماع للطلبات الجديدة الواصلة من صفحات QR الخاصة بالزبائن وتثبيتها مباشرة بجدول الطاولة المطلوبة
-        // قائمة الطلبات الواردة من QR بانتظار موافقة أو رفض الكاشير (ما تنضاف تلقائياً للطاولة)
-        let pendingQrOrdersList = [];
-
-        function listenForIncomingOrders() {
-            if (!fbDb) return;
-            fbDb.ref('incoming_orders').on('child_added', snap => {
-                const order = snap.val();
-                const orderKey = snap.key;
-                if (!order) {
-                    fbDb.ref('incoming_orders/' + orderKey).remove();
-                    return;
-                }
-                if (pendingQrOrdersList.some(o => o.key === orderKey)) return;
-
-                pendingQrOrdersList.push({ key: orderKey, order: order });
-                playBeepSound();
-                showQrOrderToast(order);
-                renderQrOrdersBadge();
-                renderQrOrdersList();
-                renderTablesBar();
-            });
-
-            // إذا الزبون سحب الصفحة أو انقطع اتصاله، نزيل الطلب من القائمة المحلية إذا انحذف من فايربيس من مكان ثاني
-            fbDb.ref('incoming_orders').on('child_removed', snap => {
-                const orderKey = snap.key;
-                pendingQrOrdersList = pendingQrOrdersList.filter(o => o.key !== orderKey);
-                renderQrOrdersBadge();
-                renderQrOrdersList();
-                renderTablesBar();
-            });
-        }
-
-        function showQrOrderToast(order) {
-            const tableNum = order.table;
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:3000;background:var(--accent-color);color:#000;padding:10px;border-radius:8px;font-weight:bold;font-size:0.85rem;box-shadow:0 2px 10px rgba(0,0,0,0.5);text-align:center;cursor:pointer;';
-            toast.innerText = `🔔 طلب جديد بانتظار الموافقة من طاولة ${tableNum}!${order.discountCodeUsed ? ' 🎁 (مستخدم كود خصم)' : ''} — اضغط هنا للمراجعة`;
-            toast.onclick = () => { toast.remove(); openQrOrdersModal(); };
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 6000);
-        }
-
-        function renderQrOrdersBadge() {
-            const btn = document.getElementById('btn-qr-orders');
-            const badge = document.getElementById('qr-orders-badge');
-            if (!btn || !badge) return;
-            const count = pendingQrOrdersList.length;
-            badge.innerText = count;
-            badge.style.display = count > 0 ? 'flex' : 'none';
-            checkQrOrdersAlarm();
-        }
-
-        let qrOrdersAlarmIntervalId = null;
-        function checkQrOrdersAlarm() {
-            const hasPending = pendingQrOrdersList.length > 0;
-            if (hasPending) {
-                if (!qrOrdersAlarmIntervalId) {
-                    qrOrdersAlarmIntervalId = setInterval(playBeepSound, 4000);
-                }
-            } else {
-                if (qrOrdersAlarmIntervalId) {
-                    clearInterval(qrOrdersAlarmIntervalId);
-                    qrOrdersAlarmIntervalId = null;
-                }
-            }
-        }
-
-        function openQrOrdersModal() {
-            renderQrOrdersList();
-            document.getElementById('qr-orders-modal').style.display = 'flex';
-        }
-
-        function closeQrOrdersModal() {
-            document.getElementById('qr-orders-modal').style.display = 'none';
-        }
-
-        function renderQrOrdersList() {
-            const container = document.getElementById('qr-orders-list-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (pendingQrOrdersList.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#888; font-size:0.8rem; padding:16px;">لا توجد طلبات بانتظار المراجعة حالياً.</p>';
-                return;
-            }
-
-            pendingQrOrdersList.forEach(entry => {
-                const order = entry.order;
-                const tableNum = order.table;
-                let itemsTotal = (order.items || []).reduce((sum, it) => sum + (it.price * it.qty), 0);
-
-                const card = document.createElement('div');
-                card.style.cssText = 'background:#1a1a1a; border:1px solid var(--border-color); border-radius:8px; padding:10px;';
-
-                let itemsHtml = (order.items || []).map(it =>
-                    `<div style="display:flex; justify-content:space-between; font-size:0.75rem; padding:2px 0;">
-                        <span>${it.name} × ${it.qty}</span>
-                        <span>${(it.price * it.qty).toLocaleString()} د.ع</span>
-                    </div>`
-                ).join('');
-
-                card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                        <strong style="color:var(--accent-color); font-size:0.85rem;">📋 طاولة ${tableNum}</strong>
-                        ${order.discountCodeUsed ? '<span style="font-size:0.68rem; background:#8e44ad; color:#fff; padding:2px 6px; border-radius:4px;">🎁 كود خصم مستخدم</span>' : ''}
-                    </div>
-                    <div style="border-top:1px dashed #444; border-bottom:1px dashed #444; padding:4px 0; margin-bottom:6px;">
-                        ${itemsHtml || '<span style="font-size:0.75rem; color:#888;">لا توجد مواد</span>'}
-                    </div>
-                    <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.8rem; margin-bottom:8px;">
-                        <span>المجموع:</span>
-                        <span style="color:var(--success-color);">${itemsTotal.toLocaleString()} د.ع${order.discountCodeUsed ? ` (- ${qrDiscountAmount.toLocaleString()} خصم)` : ''}</span>
-                    </div>
-                    <div style="display:flex; gap:6px;">
-                        <button class="btn-add-item" style="background-color: var(--success-color); flex:1;" onclick="acceptQrOrder('${entry.key}')">✅ قبول وإضافة للطاولة</button>
-                        <button class="btn-add-item" style="background-color: var(--danger-color); color:#fff; flex:1;" onclick="rejectQrOrder('${entry.key}')">❌ رفض</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        function acceptQrOrder(orderKey) {
-            const entry = pendingQrOrdersList.find(o => o.key === orderKey);
-            if (!entry) return;
-            const order = entry.order;
-            const tableNum = parseInt(order.table);
-
-            if (isNaN(tableNum) || tableNum < 1 || tableNum > totalTables) {
-                alert('رقم طاولة غير صالح بهذا الطلب، تم رفضه تلقائياً.');
-                rejectQrOrder(orderKey);
-                return;
-            }
-
-            (order.items || []).forEach(orderItem => {
-                const existing = tablesData[tableNum].items.find(i => i.id === orderItem.id);
-                if (existing) {
-                    existing.qty += orderItem.qty;
-                } else {
-                    tablesData[tableNum].items.push({
-                        id: orderItem.id,
-                        name: orderItem.name,
-                        price: orderItem.price,
-                        category: orderItem.category,
-                        qty: orderItem.qty
-                    });
-                }
-            });
-
-            if (order.discountCodeUsed) {
-                tablesData[tableNum].discount = (tablesData[tableNum].discount || 0) + qrDiscountAmount;
-            }
-
-            saveToStorage();
-            renderTablesBar();
-
-            if (activeTable === tableNum) {
-                renderOrderList();
-                const discField = document.getElementById('discount-field');
-                if (discField) discField.value = tablesData[tableNum].discount || '';
-            }
-
-            if (fbDb) fbDb.ref('incoming_orders/' + orderKey).remove();
-            pendingQrOrdersList = pendingQrOrdersList.filter(o => o.key !== orderKey);
-            renderQrOrdersBadge();
-            renderQrOrdersList();
-        }
-
-        function rejectQrOrder(orderKey) {
-            const entry = pendingQrOrdersList.find(o => o.key === orderKey);
-            if (!entry) return;
-            const order = entry.order;
-
-            if (!confirm(`هل تريد رفض طلب طاولة ${order.table}؟`)) return;
-
-            // إذا الطلب المرفوض استخدم كود خصم، نرجعه فعّال من جديد عشان ما يضيع على الزبون
-            if (order.discountCodeUsed && fbDb) {
-                fbDb.ref('discountCode').transaction(current => {
-                    if (current && current.used) {
-                        current.used = false;
-                        current.usedAt = null;
-                    }
-                    return current;
-                });
-            }
-
-            if (fbDb) fbDb.ref('incoming_orders/' + orderKey).remove();
-            pendingQrOrdersList = pendingQrOrdersList.filter(o => o.key !== orderKey);
-            renderQrOrdersBadge();
-            renderQrOrdersList();
-            renderTablesBar();
-        }
-
-        // رسم شبكة رموز QR لكل طاولة برابط منيو مختلف لكل وحدة (باستخدام المكتبة المدمجة محلياً)
-        function renderTablesQrGrid() {
-            const container = document.getElementById('qr-tables-grid');
-            if (!container) return;
-            container.innerHTML = '';
-
-            if (!siteBaseUrl) {
-                container.innerHTML = '<p style="text-align:center;color:#888;font-size:0.75rem;padding:10px;">يرجى حفظ رابط الموقع أولاً من تبويب "🔗 QR وFirebase" قبل توليد الرموز.</p>';
-                return;
-            }
-            if (typeof qrcode === 'undefined') {
-                container.innerHTML = '<p style="text-align:center;color:#888;font-size:0.75rem;padding:10px;">تعذر تحميل مكتبة QR الداخلية. جرّب تحديث الصفحة.</p>';
-                return;
-            }
-
-            for (let i = 1; i <= totalTables; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'qr-cell';
-
-                const label = document.createElement('div');
-                label.style.cssText = 'font-weight:bold;margin-bottom:4px;font-size:0.75rem;';
-                label.innerText = `طاولة ${i}`;
-                cell.appendChild(label);
-
-                const canvas = document.createElement('canvas');
-                cell.appendChild(canvas);
-
-                const btn = document.createElement('button');
-                btn.className = 'btn-row-edit';
-                btn.style.cssText = 'margin-top:4px;width:100%;';
-                btn.innerText = '⬇️ تحميل';
-                cell.appendChild(btn);
-
-                container.appendChild(cell);
-
-                const url = `${siteBaseUrl}/menu.html?table=${i}`;
-
-                try {
-                    const qr = qrcode(0, 'M');
-                    qr.addData(url);
-                    qr.make();
-
-                    const moduleCount = qr.getModuleCount();
-                    const cellSize = Math.max(2, Math.floor(150 / moduleCount));
-                    const margin = cellSize * 2;
-                    const size = moduleCount * cellSize + margin * 2;
-
-                    canvas.width = size;
-                    canvas.height = size;
-                    const ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, size, size);
-                    ctx.fillStyle = '#000000';
-                    for (let r = 0; r < moduleCount; r++) {
-                        for (let c = 0; c < moduleCount; c++) {
-                            if (qr.isDark(r, c)) {
-                                ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
-                            }
-                        }
-                    }
-                } catch (e) {
-                    console.error('فشل توليد QR لطاولة ' + i, e);
-                }
-
-                btn.onclick = () => {
-                    const link = document.createElement('a');
-                    link.download = `QR-Table-${i}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                };
-            }
-        }
-        // ============ نهاية نظام Firebase وربط QR ============
-
         function triggerManualReport() {
             const pin = prompt("الرجاء إدخال الرمز السري لإرسال التقرير وتصفير السجل:");
             if (pin === null) return; 
@@ -3793,21 +1950,7 @@ var qrcode = function() {
                 reportMsg += `⚠️ تم تصفير العدادات اليومية والسجل بالكامل يدوياً بنجاح.`;
 
                 pendingInvoices.push(reportMsg);
-
-                // تقرير منفصل لكل كاشير عنده مبالغ مستلمة بهذه الفترة
-                cashiersList.forEach(cashier => {
-                    const cashierTotal = cashierDailyTotals[cashier.id] || 0;
-                    if (cashierTotal > 0) {
-                        let cashierMsg = `🧑‍💼 *تقرير كاشير - ${cashier.name} - ${cafeName}*\n`;
-                        cashierMsg += `📅 التاريخ: ${formattedDate}\n`;
-                        cashierMsg += `⏰ وقت الإغلاق: ${formattedTime}\n`;
-                        cashierMsg += `-------------------------\n`;
-                        cashierMsg += `💰 إجمالي المبالغ المستلمة: *${cashierTotal.toLocaleString()} د.ع*`;
-                        pendingInvoices.push(cashierMsg);
-                    }
-                });
-                cashierDailyTotals = {};
-
+                
                 dailyTotalSales = 0;
                 dailyTotalDiscounts = 0;
                 dailyGameSales = 0;
@@ -3844,7 +1987,7 @@ var qrcode = function() {
             const hoursLogged = Math.floor(achievements.psActiveMinutes / 60);
             const minsLogged = Math.floor(achievements.psActiveMinutes % 60);
 
-            let msg = `🏆 *تقرير لوحة الإنجازات - ${cafeName}*\n`;
+            let msg = `🏆 *تقرير لوحة الإنجازات - كيمز كوفي*\n`;
             msg += `📅 التاريخ: ${formattedDate}\n`;
             msg += `⏰ الوقت: ${formattedTime}\n`;
             msg += `-------------------------\n`;
@@ -3886,239 +2029,8 @@ var qrcode = function() {
             localStorage.setItem('monthly_games_sales_v9', monthlyGameSales);
             localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
             localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
-            localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
-            localStorage.setItem('cafe_cashier_daily_totals_v9', JSON.stringify(cashierDailyTotals));
             localStorage.setItem('cafe_invoice_lottery_v9', JSON.stringify(invoiceLottery));
-            pushLiveStateToFirebase();
         }
-
-        // ============ نظام المزامنة الحقيقية بين عدة أجهزة (Firebase كمصدر مشترك) ============
-
-        let isApplyingRemoteSync = false; // لمنع أي تضارب بين القراءة والكتابة بنفس اللحظة
-        let liveStateSyncBound = false;
-        let menuSyncBound = false;
-
-        // يرجع كائن الطاولة الافتراضي (نفس الهيكلية المستخدمة بكل مكان بالكود)
-        function getDefaultTableState() {
-            return {
-                items: [],
-                psActive: false,
-                psStartTime: null,
-                psElapsedCost: 0,
-                psTimeString: '00:00:00',
-                startClock: '',
-                stopClock: '',
-                discount: 0,
-                psIsLimit: false,
-                psLimitMinutes: 0,
-                psTimeRemainingString: '00:00:00',
-                alarmTriggered: false
-            };
-        }
-
-        // يتأكد إن كل طاولة من 1 إلى totalTables موجودة ببيانات صحيحة، دون ما يمسح بيانات موجودة فعلاً
-        function ensureTablesDataStructure() {
-            if (!tablesData || typeof tablesData !== 'object') {
-                tablesData = {};
-            }
-            for (let i = 1; i <= totalTables; i++) {
-                if (!tablesData[i] || typeof tablesData[i] !== 'object') {
-                    tablesData[i] = getDefaultTableState();
-                    continue;
-                }
-                const t = tablesData[i];
-                if (!Array.isArray(t.items)) t.items = [];
-                if (typeof t.psActive !== 'boolean') t.psActive = false;
-                if (typeof t.psElapsedCost !== 'number') t.psElapsedCost = 0;
-                if (typeof t.psTimeString !== 'string') t.psTimeString = '00:00:00';
-                if (typeof t.startClock !== 'string') t.startClock = '';
-                if (typeof t.stopClock !== 'string') t.stopClock = '';
-                if (typeof t.discount !== 'number') t.discount = 0;
-                if (typeof t.psIsLimit !== 'boolean') t.psIsLimit = false;
-                if (typeof t.psLimitMinutes !== 'number') t.psLimitMinutes = 0;
-                if (typeof t.psTimeRemainingString !== 'string') t.psTimeRemainingString = '00:00:00';
-                if (typeof t.alarmTriggered !== 'boolean') t.alarmTriggered = false;
-                if (t.psStartTime === undefined) t.psStartTime = null;
-            }
-        }
-
-        // يحوّل مفاتيح الطاولات الرقمية (1، 2، 3...) لمفاتيح نصية آمنة (t_1، t_2...) عشان Firebase ما يحولها بالغلط لمصفوفة (Array) ويخرب ترتيبها
-        function tablesDataToSafeKeys(data) {
-            const safe = {};
-            for (const key in data) {
-                safe['t_' + key] = data[key];
-            }
-            return safe;
-        }
-
-        // يرجع مفاتيح الطاولات لصيغتها الرقمية الطبيعية بعد استلامها من Firebase
-        function tablesDataFromSafeKeys(data) {
-            const restored = {};
-            for (const key in data) {
-                if (data[key] == null) continue;
-                const cleanKey = key.indexOf('t_') === 0 ? key.slice(2) : key;
-                restored[cleanKey] = data[key];
-            }
-            return restored;
-        }
-
-        // يرسل الحالة الحالية الكاملة (الطاولات + المبيعات + المنجزات + القرعة) لـ Firebase عشان باقي الأجهزة تشوفها لحظياً
-        let liveSyncErrorShown = false;
-        function pushLiveStateToFirebase() {
-            if (!firebaseReady || isApplyingRemoteSync) return;
-            fbDb.ref('liveState').set({
-                tablesData: tablesDataToSafeKeys(tablesData),
-                totalTables: totalTables,
-                dailyTotalSales: dailyTotalSales,
-                dailyTotalDiscounts: dailyTotalDiscounts,
-                dailyGameSales: dailyGameSales,
-                weeklyTotalSales: weeklyTotalSales,
-                weeklyTotalDiscounts: weeklyTotalDiscounts,
-                weeklyGameSales: weeklyGameSales,
-                monthlyTotalSales: monthlyTotalSales,
-                monthlyTotalDiscounts: monthlyTotalDiscounts,
-                monthlyGameSales: monthlyGameSales,
-                achievements: achievements,
-                invoiceLottery: invoiceLottery,
-                productSalesStats: productSalesStats,
-                systemPin: systemPin,
-                adminsList: adminsList,
-                cashiersList: cashiersList,
-                cashierDailyTotals: cashierDailyTotals,
-                updatedAt: Date.now(),
-                updatedByDevice: deviceSyncId
-            }).then(() => {
-                liveSyncErrorShown = false;
-            }).catch(err => {
-                console.error('فشل رفع الحالة الحية لفايربيس:', err);
-                if (!liveSyncErrorShown) {
-                    liveSyncErrorShown = true;
-                    alert('⚠️ تعذرت مزامنة البيانات مع الأجهزة الثانية!\nسبب الخطأ: ' + err.message + '\n\nالسبب الغالب: صلاحيات قاعدة البيانات (Rules) بفايربيس ما تسمح بالكتابة. راجع تبويب Rules بـ Realtime Database.');
-                }
-            });
-        }
-
-        // معرّف عشوائي لهذا الجهاز، يستخدم لتجاهل نسخة التحديث اللي أرسلها هذا الجهاز نفسه لحظة استلامها من فايربيس
-        const deviceSyncId = 'dev_' + Math.random().toString(36).slice(2) + '_' + Date.now();
-
-        // يستقبل أي تحديث حصل من جهاز آخر (طاولات، مبيعات، منجزات...) ويطبقه فوراً على هذا الجهاز
-        function listenForLiveStateChanges() {
-            if (!fbDb || liveStateSyncBound) return;
-            liveStateSyncBound = true;
-
-            fbDb.ref('liveState').on('value', snap => {
-                const data = snap.val();
-
-                if (!data) {
-                    // ما في أي بيانات محفوظة على فايربيس بعد (أول تشغيل)، نرفع بيانات هذا الجهاز كنقطة بداية
-                    pushLiveStateToFirebase();
-                    return;
-                }
-
-                if (data.updatedByDevice === deviceSyncId) {
-                    // هذا التحديث صادر من نفس الجهاز، تجاهله (تفادي حلقة تحديث بلا داعي)
-                    return;
-                }
-
-                try {
-                    isApplyingRemoteSync = true;
-
-                    if (data.tablesData) tablesData = tablesDataFromSafeKeys(data.tablesData);
-                    if (typeof data.totalTables === 'number') totalTables = data.totalTables;
-                    if (typeof data.dailyTotalSales === 'number') dailyTotalSales = data.dailyTotalSales;
-                    if (typeof data.dailyTotalDiscounts === 'number') dailyTotalDiscounts = data.dailyTotalDiscounts;
-                    if (typeof data.dailyGameSales === 'number') dailyGameSales = data.dailyGameSales;
-                    if (typeof data.weeklyTotalSales === 'number') weeklyTotalSales = data.weeklyTotalSales;
-                    if (typeof data.weeklyTotalDiscounts === 'number') weeklyTotalDiscounts = data.weeklyTotalDiscounts;
-                    if (typeof data.weeklyGameSales === 'number') weeklyGameSales = data.weeklyGameSales;
-                    if (typeof data.monthlyTotalSales === 'number') monthlyTotalSales = data.monthlyTotalSales;
-                    if (typeof data.monthlyTotalDiscounts === 'number') monthlyTotalDiscounts = data.monthlyTotalDiscounts;
-                    if (typeof data.monthlyGameSales === 'number') monthlyGameSales = data.monthlyGameSales;
-                    if (data.achievements) achievements = data.achievements;
-                    if (data.invoiceLottery) invoiceLottery = data.invoiceLottery;
-                    if (data.productSalesStats) productSalesStats = data.productSalesStats;
-                    if (data.systemPin) systemPin = data.systemPin;
-                    if (data.adminsList) adminsList = data.adminsList;
-                    if (data.cashiersList) cashiersList = data.cashiersList;
-                    if (data.cashierDailyTotals) cashierDailyTotals = data.cashierDailyTotals;
-
-                    ensureTablesDataStructure();
-
-                    // نحفظ محلياً بدون ما نعيد الإرسال لفايربيس (لأننا أصلاً استلمناها منه)
-                    localStorage.setItem('cafe_pos_v9', JSON.stringify(tablesData));
-                    localStorage.setItem('cafe_total_tables_v9', totalTables);
-                    localStorage.setItem('daily_sales_hidden_v9', dailyTotalSales);
-                    localStorage.setItem('daily_discounts_hidden_v9', dailyTotalDiscounts);
-                    localStorage.setItem('daily_games_sales_v9', dailyGameSales);
-                    localStorage.setItem('weekly_sales_hidden_v9', weeklyTotalSales);
-                    localStorage.setItem('weekly_discounts_hidden_v9', weeklyTotalDiscounts);
-                    localStorage.setItem('weekly_games_sales_v9', weeklyGameSales);
-                    localStorage.setItem('monthly_sales_hidden_v9', monthlyTotalSales);
-                    localStorage.setItem('monthly_discounts_hidden_v9', monthlyTotalDiscounts);
-                    localStorage.setItem('monthly_games_sales_v9', monthlyGameSales);
-                    localStorage.setItem('cafe_achievements_v9', JSON.stringify(achievements));
-                    localStorage.setItem('cafe_invoice_lottery_v9', JSON.stringify(invoiceLottery));
-                    localStorage.setItem('cafe_product_stats_v9', JSON.stringify(productSalesStats));
-                    localStorage.setItem('cafe_system_pin_v9', systemPin);
-                    localStorage.setItem('cafe_admins_list_v9', JSON.stringify(adminsList));
-                    localStorage.setItem('cafe_cashiers_list_v9', JSON.stringify(cashiersList));
-                    localStorage.setItem('cafe_cashier_daily_totals_v9', JSON.stringify(cashierDailyTotals));
-
-                    refreshAllUIAfterSync();
-                } catch (e) {
-                    console.error('فشل تطبيق تحديث المزامنة الحية المستلم:', e);
-                } finally {
-                    // نضمن دائماً إلغاء قفل الإرسال حتى لو صار خطأ غير متوقع بالأعلى، عشان الجهاز ما ينقطع عن إرسال تحديثاته لاحقاً
-                    isApplyingRemoteSync = false;
-                }
-            });
-        }
-
-        // يستقبل أي تحديث بالمنيو (منتجات/سعر PS4) صار من جهاز آخر ويطبقه فوراً على هذا الجهاز
-        function listenForMenuChangesFromOtherDevices() {
-            if (!fbDb || menuSyncBound) return;
-            menuSyncBound = true;
-
-            fbDb.ref('menu').on('value', snap => {
-                const data = snap.val();
-                if (!data || !data.products) return;
-
-                productsList = data.products;
-                if (typeof data.psPrice === 'number') psPricePerHour = data.psPrice;
-
-                localStorage.setItem('cafe_products_list_v9', JSON.stringify(productsList));
-                localStorage.setItem('cafe_ps_price_v9', psPricePerHour);
-
-                renderDynamicMenu();
-                const psPriceInput = document.getElementById('setting-ps-price');
-                if (psPriceInput) psPriceInput.value = psPricePerHour;
-                const settingsItemsListVisible = document.getElementById('settings-items-list-container');
-                if (settingsItemsListVisible) renderSettingsItemsList();
-            });
-        }
-
-        // يعيد رسم كل عناصر الواجهة بعد استلام تحديث من جهاز آخر
-        function refreshAllUIAfterSync() {
-            renderTablesBar();
-            renderOrderList();
-            updatePsTimerUI();
-            checkActiveAlarms();
-            updateAchievementsUI();
-            renderLotteryUI();
-            renderProductStatsList(currentStatsPeriod);
-
-            const discField = document.getElementById('discount-field');
-            if (discField && tablesData[activeTable]) {
-                discField.value = tablesData[activeTable].discount || '';
-            }
-            const totalTablesInput = document.getElementById('setting-total-tables');
-            if (totalTablesInput) totalTablesInput.value = totalTables;
-
-            if (activeTable > totalTables) {
-                switchTable(1);
-            }
-        }
-        // ============ نهاية نظام المزامنة الحقيقية بين الأجهزة ============
 
         function formatTimeClock(timestamp) {
             if(!timestamp) return '';
@@ -4247,8 +2159,6 @@ var qrcode = function() {
                 renderSettingsItemsList();
                 updateAchievementsUI();
 
-                document.getElementById('setting-cafe-name').value = cafeName;
-                document.getElementById('setting-cafe-name-en').value = cafeNameEn;
                 document.getElementById('setting-ps-price').value = psPricePerHour;
                 document.getElementById('setting-total-tables').value = totalTables;
 
@@ -4260,12 +2170,7 @@ var qrcode = function() {
 
                 renderLotteryUI();
                 renderAdminsList();
-                renderCashiersList();
                 loadConnectionSettingsUI();
-                loadFirebaseSettingsUI();
-                renderDiscountCodeSettingsUI();
-                renderTablesQrGrid();
-                renderCafeLocationStatus();
             } else if (pin !== null) {
                 alert("الرمز السري خاطئ!");
             }
@@ -4371,7 +2276,6 @@ var qrcode = function() {
             
             renderSettingsItemsList();
             renderDynamicMenu();
-            syncMenuToFirebase();
             alert(`تمت إضافة "${name}" للمنيو بنجاح! 🎉`);
         }
 
@@ -4393,7 +2297,6 @@ var qrcode = function() {
             renderSettingsItemsList();
             renderDynamicMenu();
             renderOrderList();
-            syncMenuToFirebase();
         }
 
         function deleteProduct(id) {
@@ -4405,7 +2308,6 @@ var qrcode = function() {
                 saveToStorage();
                 renderSettingsItemsList();
                 renderDynamicMenu();
-                syncMenuToFirebase();
             }
         }
 
@@ -4567,7 +2469,6 @@ var qrcode = function() {
         }
 
         function renderTablesBar() {
-            ensureTablesDataStructure();
             const container = document.getElementById('tables-container');
             container.innerHTML = '';
             
@@ -4592,8 +2493,6 @@ var qrcode = function() {
                 
                 if(table.alarmTriggered) {
                     className += ' time-out-alert';
-                } else if (pendingQrOrdersList.some(o => parseInt(o.order.table) === i)) {
-                    className += ' qr-order-alert';
                 }
                 
                 btn.className = className;
@@ -4601,9 +2500,6 @@ var qrcode = function() {
                 btn.onclick = () => {
                     if (!audioCtx) {
                         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    }
-                    if (pendingQrOrdersList.some(o => parseInt(o.order.table) === i)) {
-                        openQrOrdersModal();
                     }
                     switchTable(i);
                 };
@@ -4952,26 +2848,11 @@ var qrcode = function() {
             const itemTotal = roundToNearest250(item.price * item.qty);
 
             if(confirm(`هل تريد استلام حساب "${item.name}" بقيمة (${itemTotal.toLocaleString()} د.ع) بشكل منفرد؟`)) {
-
-                let cashier = null;
-                if (cashiersList.length > 0) {
-                    const cashierPin = prompt('أدخل رمزك الخاص كـ كاشير لإتمام الاستلام:');
-                    if (cashierPin === null) return;
-                    cashier = getCashierByPin(cashierPin.trim());
-                    if (!cashier) {
-                        alert('رمز الكاشير غير صحيح! تم إلغاء عملية الاستلام.');
-                        return;
-                    }
-                }
-
+                
                 dailyTotalSales += itemTotal;
                 weeklyTotalSales += itemTotal;
                 monthlyTotalSales += itemTotal;
-                achievements.cumulativeSales += itemTotal;
-
-                if (cashier) {
-                    cashierDailyTotals[cashier.id] = (cashierDailyTotals[cashier.id] || 0) + itemTotal;
-                }
+                achievements.cumulativeSales += itemTotal; 
 
                 if (item.category === 'games') {
                     dailyGameSales += itemTotal;
@@ -4989,13 +2870,10 @@ var qrcode = function() {
                 const statName = isPsItem ? '🎮 وقت PS4 (تشغيل)' : item.name;
                 trackProductSale(statKey, statName, item.qty, itemTotal);
 
-                let message = `💵 *استلام حساب منفرد - ${cafeName}*\n`;
+                let message = `💵 *استلام حساب منفرد - كيمز كوفي*\n`;
                 message += `▪️ طاولة رقم: ${activeTable}\n`;
                 message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
                 message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
-                if (cashier) {
-                    message += `🧑‍💼 الكاشير: ${cashier.name}\n`;
-                }
                 message += `-------------------------\n`;
                 message += `▪️ المادة المستلمة: ${item.name} (عدد ${item.qty})\n`;
                 if(item.timeDetails) {
@@ -5077,28 +2955,13 @@ var qrcode = function() {
             finalTotal = roundToNearest250(finalTotal);
 
             if(confirm(`هل تريد تثبيت حساب طاولة ${activeTable} بمبلغ (${finalTotal.toLocaleString()} د.ع)؟`)) {
-
-                let cashier = null;
-                if (cashiersList.length > 0) {
-                    const cashierPin = prompt('أدخل رمزك الخاص كـ كاشير لإتمام تثبيت الحساب:');
-                    if (cashierPin === null) return;
-                    cashier = getCashierByPin(cashierPin.trim());
-                    if (!cashier) {
-                        alert('رمز الكاشير غير صحيح! تم إلغاء عملية التثبيت.');
-                        return;
-                    }
-                }
-
+                
                 dailyTotalSales += finalTotal;
                 dailyTotalDiscounts += discount;
                 weeklyTotalSales += finalTotal;
                 weeklyTotalDiscounts += discount;
                 monthlyTotalSales += finalTotal;
                 monthlyTotalDiscounts += discount;
-
-                if (cashier) {
-                    cashierDailyTotals[cashier.id] = (cashierDailyTotals[cashier.id] || 0) + finalTotal;
-                }
                 
                 let gamesSum = 0;
                 if(tablesData[activeTable].psElapsedCost > 0) {
@@ -5130,13 +2993,10 @@ var qrcode = function() {
                 // تسجيل الفاتورة بنظام الترقيم والقرعة (فقط للفواتير 10 آلاف دينار فأكثر)
                 const lotteryEntry = registerInvoiceForLottery(finalTotal, activeTable);
                 
-                let message = `🧾 *تثبيت حساب جديد - ${cafeName}*\n`;
+                let message = `🧾 *تثبيت حساب جديد - كيمز كوفي*\n`;
                 message += `▪️ طاولة رقم: ${activeTable}\n`;
                 message += `📅 التاريخ: ${new Date().toLocaleDateString('ar-EG')}\n`;
                 message += `⏰ الوقت: ${formatTimeClock(new Date().getTime())}\n`;
-                if (cashier) {
-                    message += `🧑‍💼 الكاشير: ${cashier.name}\n`;
-                }
                 if (lotteryEntry) {
                     message += `🎟️ رقم الفاتورة (القرعة): *${lotteryEntry.number} / 100*\n`;
                 }
@@ -5239,8 +3099,10 @@ var qrcode = function() {
             });
         }
 
-        // ============ نظام الطباعة الحرارية المباشرة عبر بلوتوث (بدون أي برنامج وسيط) ============
-        let printerPort = null;
+        // ============ نظام الطباعة الحرارية المباشرة (بلوتوث أو USB، حسب الطابعة - بدون أي برنامج وسيط) ============
+        let printerPort = null;        // Web Serial (بلوتوث كلاسيك SPP، أو USB-Serial على الكمبيوتر)
+        let usbPrinterDevice = null;   // WebUSB (طابعات USB مباشرة على أندرويد/كمبيوتر)
+        let usbPrinterEndpoint = null;
 
         function getPaperConfig() {
             const mode = localStorage.getItem('cafe_printer_paper_v9') || '58mm';
@@ -5271,6 +3133,22 @@ var qrcode = function() {
             localStorage.setItem('cafe_printer_font_v9', val);
         }
 
+        function getPrinterMode() {
+            return localStorage.getItem('cafe_printer_mode_v9') || 'auto';
+        }
+
+        function updatePrinterModeSetting(val) {
+            localStorage.setItem('cafe_printer_mode_v9', val);
+        }
+
+        // آخر طريقة اتصال نجحت (بلوتوث أو USB) - نحاول نفس الطريقة أول شي بالمرة الجاية
+        function getPrinterTransport() {
+            return localStorage.getItem('cafe_printer_transport_v9') || null;
+        }
+        function setPrinterTransport(val) {
+            localStorage.setItem('cafe_printer_transport_v9', val);
+        }
+
         function updatePrinterStatusUI(connected) {
             const el = document.getElementById('printer-status-text');
             if (!el) return;
@@ -5293,11 +3171,20 @@ var qrcode = function() {
             const paperSelect = document.getElementById('setting-printer-paper');
             const baudSelect = document.getElementById('setting-printer-baud');
             const fontSelect = document.getElementById('setting-printer-font');
+            const modeSelect = document.getElementById('setting-printer-mode');
             if (paperSelect) paperSelect.value = localStorage.getItem('cafe_printer_paper_v9') || '58mm';
             if (baudSelect) baudSelect.value = String(getPrinterBaud());
             if (fontSelect) fontSelect.value = localStorage.getItem('cafe_printer_font_v9') || 'medium';
+            if (modeSelect) modeSelect.value = getPrinterMode();
 
-            if (!('serial' in navigator)) {
+            const hasSerial = ('serial' in navigator);
+            const hasUsb = ('usb' in navigator);
+            const btBtn = document.getElementById('btn-connect-bt');
+            const usbBtn = document.getElementById('btn-connect-usb');
+            if (btBtn) btBtn.style.display = hasSerial ? 'block' : 'none';
+            if (usbBtn) usbBtn.style.display = hasUsb ? 'block' : 'none';
+
+            if (!hasSerial && !hasUsb) {
                 if (warningEl) warningEl.style.display = 'block';
                 updatePrinterStatusUI(false);
                 return;
@@ -5305,17 +3192,25 @@ var qrcode = function() {
             if (warningEl) warningEl.style.display = 'none';
 
             try {
-                const ports = await navigator.serial.getPorts();
-                updatePrinterStatusUI(ports.length > 0);
+                let connected = false;
+                if (hasSerial) {
+                    const ports = await navigator.serial.getPorts();
+                    if (ports.length > 0) connected = true;
+                }
+                if (!connected && hasUsb) {
+                    const devices = await navigator.usb.getDevices();
+                    if (devices.length > 0) connected = true;
+                }
+                updatePrinterStatusUI(connected);
             } catch (e) {
                 updatePrinterStatusUI(false);
             }
         }
 
-        // إقران الطابعة يدوياً من الإعدادات (مرة وحدة فقط، وبعدها تتذكرها المتصفح تلقائياً)
-        async function connectPrinterManually() {
+        // إقران طابعة بلوتوث (SPP) يدوياً من الإعدادات - مرة وحدة، وبعدها تتذكرها المتصفح تلقائياً
+        async function connectPrinterBluetooth() {
             if (!('serial' in navigator)) {
-                alert("متصفح Chrome عندك ما يدعم الطباعة المباشرة. حدّثه من متجر Google Play لآخر إصدار وحاول مرة ثانية.");
+                alert("متصفح الجهاز ما يدعم الاتصال المباشر بالبلوتوث. جرب خيار USB بالأسفل، أو حدّث Chrome لآخر إصدار.");
                 return;
             }
             try {
@@ -5323,43 +3218,143 @@ var qrcode = function() {
                     try { await printerPort.close(); } catch (e) {}
                     printerPort = null;
                 }
-                printerPort = await navigator.serial.requestPort({
-                    filters: [{ bluetoothServiceClassId: 0x1101 }] // بروفايل SPP القياسي لطابعات البلوتوث الحرارية
-                });
+                try {
+                    printerPort = await navigator.serial.requestPort();
+                } catch (openListErr) {
+                    // إذا فشلت القائمة المفتوحة لأي سبب، نجرب فلتر SPP القياسي كخيار احتياطي
+                    printerPort = await navigator.serial.requestPort({
+                        filters: [{ bluetoothServiceClassId: 0x1101 }]
+                    });
+                }
                 await printerPort.open({ baudRate: getPrinterBaud() });
+                setPrinterTransport('bt-serial');
                 updatePrinterStatusUI(true);
-                alert("تم إقران الطابعة بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
+                alert("تم إقران الطابعة عبر البلوتوث بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
             } catch (e) {
-                console.error('فشل إقران الطابعة:', e);
+                console.error('فشل إقران الطابعة عبر البلوتوث:', e);
                 updatePrinterStatusUI(false);
-                alert("ما كدرنا نقرن الطابعة. تأكد إنها:\n1) مفعّلة (شغالة) وقريبة من الموبايل.\n2) مقرونة (Paired) مسبقاً من إعدادات بلوتوث الموبايل نفسه.\nوحاول مرة ثانية.");
+                alert("ما كدرنا نقرن الطابعة عبر البلوتوث.\n\nتأكد من:\n1) الطابعة مفعّلة (شغالة) وقريبة من الجهاز.\n2) الطابعة مقرونة (Paired) مسبقاً من إعدادات بلوتوث الجهاز نفسه (خارج التطبيق) - هذا شرط أساسي.\n3) بلوتوث الجهاز مفعّل، وصلاحية 'الأجهزة القريبة' ممنوحة للمتصفح/التطبيق من إعدادات أندرويد.\n\nوحاول مرة ثانية، أو جرب خيار USB بالأسفل لو طابعتك توصل بسلك.");
             }
         }
 
-        // يحاول الاتصال تلقائياً بطابعة سبق إقرانها، وإلا يطلب من المستخدم يختارها
-        async function ensurePrinterPort() {
-            if (!('serial' in navigator)) {
-                throw new Error('NO_SERIAL_API');
-            }
-            if (printerPort && printerPort.readable) {
-                return printerPort;
+        // إقران طابعة USB يدوياً من الإعدادات - يشتغل على أغلب طابعات USB الحرارية بدون أي درايفر
+        async function connectPrinterUSB() {
+            if (!('usb' in navigator)) {
+                alert("متصفح الجهاز ما يدعم الاتصال المباشر عبر USB. جرب خيار البلوتوث بالأعلى، أو حدّث Chrome لآخر إصدار.");
+                return;
             }
             try {
-                const existingPorts = await navigator.serial.getPorts();
-                if (existingPorts.length > 0) {
-                    printerPort = existingPorts[0];
-                    if (!printerPort.readable) {
-                        await printerPort.open({ baudRate: getPrinterBaud() });
-                    }
-                    return printerPort;
+                if (usbPrinterDevice) {
+                    try { await usbPrinterDevice.close(); } catch (e) {}
+                    usbPrinterDevice = null;
+                    usbPrinterEndpoint = null;
                 }
-            } catch (e) { /* نتابع لطلب إقران جديد */ }
+                const device = await navigator.usb.requestDevice({ filters: [] });
+                await openAndClaimUsbPrinter(device);
+                setPrinterTransport('usb');
+                updatePrinterStatusUI(true);
+                alert("تم إقران الطابعة عبر USB بنجاح! ✅ جاهزة للطباعة المباشرة من الآن.");
+            } catch (e) {
+                console.error('فشل إقران الطابعة عبر USB:', e);
+                updatePrinterStatusUI(false);
+                alert("ما كدرنا نقرن الطابعة عبر USB.\n\nتأكد من:\n1) الطابعة موصولة بسلك USB مباشرة بالجهاز (أو عبر كيبل OTG لو الجهاز موبايل/تابلت).\n2) الطابعة مشغّلة (فيها طاقة).\n\nوحاول مرة ثانية، أو جرب خيار البلوتوث بالأعلى لو طابعتك تدعم بلوتوث.");
+            }
+        }
 
-            printerPort = await navigator.serial.requestPort({
-                filters: [{ bluetoothServiceClassId: 0x1101 }]
-            });
-            await printerPort.open({ baudRate: getPrinterBaud() });
-            return printerPort;
+        // يفتح جهاز USB ويحدد أول واجهة فيها منفذ إرسال (bulk OUT) - يشتغل مع أغلب طابعات ESC/POS
+        // بدون الحاجة لمعرفة رقم الواجهة أو المنفذ مسبقاً (يكتشفهم تلقائياً)
+        async function openAndClaimUsbPrinter(device) {
+            await device.open();
+            if (device.configuration === null) {
+                await device.selectConfiguration(1);
+            }
+            let interfaceNumber = null;
+            let endpointNumber = null;
+            for (const iface of device.configuration.interfaces) {
+                for (const alt of iface.alternates) {
+                    const outEp = alt.endpoints.find(e => e.direction === 'out');
+                    if (outEp) {
+                        interfaceNumber = iface.interfaceNumber;
+                        endpointNumber = outEp.endpointNumber;
+                        break;
+                    }
+                }
+                if (interfaceNumber !== null) break;
+            }
+            if (interfaceNumber === null) {
+                throw new Error('NO_OUT_ENDPOINT');
+            }
+            await device.claimInterface(interfaceNumber);
+            usbPrinterDevice = device;
+            usbPrinterEndpoint = endpointNumber;
+        }
+
+        // يحاول الاتصال تلقائياً بطابعة سبق إقرانها (بلوتوث أو USB)، ويرجع كائن فيه دالة write() موحدة
+        // بغض النظر عن طريقة الاتصال، حتى تبقى بقية الكود (بناء الفاتورة وطباعتها) موحدة لكل الطابعات
+        async function ensurePrinterConnection() {
+            const preferred = getPrinterTransport();
+            const hasSerial = ('serial' in navigator);
+            const hasUsb = ('usb' in navigator);
+
+            // إعادة استخدام اتصال مفتوح أصلاً بهذه الجلسة
+            if (printerPort && printerPort.readable) {
+                return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
+            }
+            if (usbPrinterDevice) {
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            // محاولة إعادة الاتصال التلقائي بآخر طابعة مقرونة، بالترتيب المفضل المحفوظ
+            const tryReconnectSerial = async () => {
+                if (!hasSerial) return false;
+                const existingPorts = await navigator.serial.getPorts();
+                if (existingPorts.length === 0) return false;
+                printerPort = existingPorts[0];
+                if (!printerPort.readable) await printerPort.open({ baudRate: getPrinterBaud() });
+                setPrinterTransport('bt-serial');
+                return true;
+            };
+            const tryReconnectUsb = async () => {
+                if (!hasUsb) return false;
+                const existingDevices = await navigator.usb.getDevices();
+                if (existingDevices.length === 0) return false;
+                await openAndClaimUsbPrinter(existingDevices[0]);
+                setPrinterTransport('usb');
+                return true;
+            };
+
+            try {
+                if (preferred === 'usb') {
+                    if (!(await tryReconnectUsb())) await tryReconnectSerial();
+                } else {
+                    if (!(await tryReconnectSerial())) await tryReconnectUsb();
+                }
+            } catch (e) { /* نتابع - إذا ما نجح رح نرمي خطأ بالأسفل */ }
+
+            if (printerPort && printerPort.readable) {
+                return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
+            }
+            if (usbPrinterDevice) {
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            // ما عندنا طابعة مقرونة سابقاً - نطلب من المستخدم يقرن وحدة (يفتح اختيار المتصفح)
+            if (hasSerial) {
+                try {
+                    printerPort = await navigator.serial.requestPort();
+                    await printerPort.open({ baudRate: getPrinterBaud() });
+                    setPrinterTransport('bt-serial');
+                    return { write: async (data) => { const w = printerPort.writable.getWriter(); await w.write(data); w.releaseLock(); } };
+                } catch (e) { /* نجرب USB بالأسفل */ }
+            }
+            if (hasUsb) {
+                const device = await navigator.usb.requestDevice({ filters: [] });
+                await openAndClaimUsbPrinter(device);
+                setPrinterTransport('usb');
+                return { write: async (data) => { await usbPrinterDevice.transferOut(usbPrinterEndpoint, data); } };
+            }
+
+            throw new Error('NO_PRINTER_API');
         }
 
         // رسم الفاتورة كصورة بيضاء/سوداء بعرض ورق الطابعة الحرارية بالضبط
@@ -5430,8 +3425,8 @@ var qrcode = function() {
                 y += Math.round(lineH * 0.45);
             }
 
-            drawCenter(cafeName, titleFont, true);
-            drawCenter(cafeNameEn, smallFont, false);
+            drawCenter('كيمز كوفي', titleFont, true);
+            drawCenter("GAME'S COFFEE", smallFont, false);
             y += Math.round(lineH * 0.15);
             if (invoiceNumber) {
                 drawCenter(`🎟️ رقم الفاتورة: ${invoiceNumber} / 100`, Math.round(baseFont * 1.05), true);
@@ -5521,7 +3516,7 @@ var qrcode = function() {
             return finalBuffer;
         }
 
-        // زر "🖨️ طباعة" الرئيسي: يطبع مباشرة على الطابعة الحرارية بلمسة وحدة بدون أي نافذة أو برنامج وسيط
+        // زر "🖨️ طباعة" الرئيسي: يطبع مباشرة على الطابعة الحرارية بلمسة وحدة، إلا إذا كان وضع الطباعة مضبوط على "نافذة الطباعة العادية دائماً"
         async function printOrderDirect() {
             const subtotal = calculateTableSubtotal(activeTable);
             if (subtotal === 0) {
@@ -5529,8 +3524,9 @@ var qrcode = function() {
                 return;
             }
 
-            if (!('serial' in navigator)) {
-                // متصفح ما يدعم الطباعة المباشرة (كمبيوتر أو Chrome قديم) - نلجأ لنافذة الطباعة العادية
+            if (getPrinterMode() === 'system' || (!('serial' in navigator) && !('usb' in navigator))) {
+                // إما المستخدم اختار "نافذة الطباعة العادية دائماً" (موصى به مع RawBT على أندرويد)،
+                // أو المتصفح أصلاً ما يدعم أي طريقة اتصال مباشرة بالطابعة
                 window.print();
                 return;
             }
@@ -5539,10 +3535,8 @@ var qrcode = function() {
                 const canvas = buildReceiptCanvas(null);
                 const escposData = canvasToEscPosRaster(canvas);
 
-                const port = await ensurePrinterPort();
-                const writer = port.writable.getWriter();
-                await writer.write(escposData);
-                writer.releaseLock();
+                const conn = await ensurePrinterConnection();
+                await conn.write(escposData);
                 updatePrinterStatusUI(true);
             } catch (err) {
                 console.error('خطأ الطباعة المباشرة:', err);
@@ -5555,14 +3549,17 @@ var qrcode = function() {
 
         // طباعة الفاتورة الرسمية النهائية تلقائياً عند تثبيت الحساب (مع رقمها إن وجد) - بدون مقاطعة عملية الإغلاق حتى لو فشلت
         async function printFinalizedReceipt(invoiceNumber) {
-            if (!('serial' in navigator)) return;
+            if (getPrinterMode() === 'system') {
+                // المستخدم اختار "نافذة الطباعة العادية دائماً" - نفتحها هنا أيضاً حسب اختياره
+                if ('print' in window) window.print();
+                return;
+            }
+            if (!('serial' in navigator) && !('usb' in navigator)) return;
             try {
                 const canvas = buildReceiptCanvas(invoiceNumber);
                 const escposData = canvasToEscPosRaster(canvas);
-                const port = await ensurePrinterPort();
-                const writer = port.writable.getWriter();
-                await writer.write(escposData);
-                writer.releaseLock();
+                const conn = await ensurePrinterConnection();
+                await conn.write(escposData);
                 updatePrinterStatusUI(true);
             } catch (err) {
                 console.error('تعذرت الطباعة التلقائية للفاتورة النهائية:', err);
@@ -5586,28 +3583,15 @@ var qrcode = function() {
             if (event.target == printerModal) {
                 closePrinterSettingsModal();
             }
-            const qrOrdersModal = document.getElementById('qr-orders-modal');
-            if (event.target == qrOrdersModal) {
-                closeQrOrdersModal();
-            }
         }
 
-        function safeRun(fn, label) {
-            try {
-                fn();
-            } catch (e) {
-                console.error('فشل تنفيذ خطوة بدء التشغيل (' + label + '):', e);
-            }
-        }
-
-        safeRun(() => applyThemeColor(customThemeColor), 'applyThemeColor');
-        safeRun(applyCafeName, 'applyCafeName');
-        safeRun(checkAndResetAllPeriods, 'checkAndResetAllPeriods');
-        safeRun(renderDynamicMenu, 'renderDynamicMenu');
-        safeRun(renderTablesBar, 'renderTablesBar');
-        safeRun(renderOrderList, 'renderOrderList');
-        safeRun(updateNetworkStatusUI, 'updateNetworkStatusUI');
-        safeRun(initFirebaseIfConfigured, 'initFirebaseIfConfigured');
+        checkLicenseStatus();
+        applyThemeColor(customThemeColor);
+        checkAndResetAllPeriods();
+        renderDynamicMenu();
+        renderTablesBar();
+        renderOrderList();
+        updateNetworkStatusUI();
 
         // تسجيل الـ Service Worker لتفعيل التثبيت على الشاشة الرئيسية والعمل أوفلاين
         if ('serviceWorker' in navigator) {
