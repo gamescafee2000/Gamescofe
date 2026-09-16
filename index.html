@@ -624,13 +624,13 @@
 
             <div class="checkout-area">
                 <div class="discount-container" id="disc-box">
-                    <span class="discount-label">💸 الخصم (د.ع):</span>
+                    <span class="discount-label">💸 الخصم (<span id="cur-lbl-discount">د.ع</span>):</span>
                     <input type="number" id="discount-field" class="discount-input" placeholder="0" value="" min="0" step="250" oninput="updateDiscountValue(this.value)">
                 </div>
                 
                 <div class="total-box">
                     <span>المجموع:</span>
-                    <span class="total-val" id="total-price">0 د.ع</span>
+                    <span class="total-val" id="total-price">0</span>
                 </div>
                 
                 <div class="action-btns">
@@ -721,7 +721,7 @@
                             <input type="text" id="new-item-name" placeholder="مثال: إسبريسو">
                         </div>
                         <div class="form-group">
-                            <label>السعر (د.ع):</label>
+                            <label>السعر (<span id="cur-lbl-price">د.ع</span>):</label>
                             <input type="number" id="new-item-price" placeholder="مثال: 1500" step="250">
                         </div>
                         <button class="btn-add-item" id="btn-add-product-ui" onclick="addNewProduct()">إضافة المادة للمنيو</button>
@@ -746,11 +746,11 @@
                                 <span>🥇 أول مليون مبيعات</span>
                                 <span id="ach-million-badge">❌ لم ينجز</span>
                             </div>
-                            <div class="achievement-desc">إجمالي مبيعاتك التراكمية في الصندوق لتصل إلى 1,000,000 د.ع.</div>
+                            <div class="achievement-desc">إجمالي مبيعاتك التراكمية في الصندوق لتصل إلى <span id="cur-lbl-ach-goal">1,000,000</span> <span id="cur-lbl-ach-desc">د.ع</span>.</div>
                             <div class="achievement-progress-bar">
                                 <div class="achievement-progress" id="ach-million-progress"></div>
                             </div>
-                            <div class="achievement-status-txt" id="ach-million-text">0 / 1,000,000 د.ع</div>
+                            <div class="achievement-status-txt" id="ach-million-text">0 / 1,000,000</div>
                         </div>
 
                         <!-- تم استبدال الشاي برمجياً هنا لحساب عدد قناني الماء المباعة بدقة -->
@@ -794,9 +794,38 @@
 
                 <div id="tab-general" class="tab-panel">
                     <div class="settings-section">
+                        <h3>💱 العملة</h3>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">اختار عملة المحل. رمزها يتحدث تلقائياً بكل مكان بالبرنامج (الأسعار، الفواتير، التقارير عبر واتساب/تلغرام).</p>
+                        <div class="form-group">
+                            <label>العملة:</label>
+                            <select id="setting-currency" onchange="updateCurrencySetting(this.value)">
+                                <option value="IQD">دينار عراقي (د.ع)</option>
+                                <option value="USD">دولار أمريكي ($)</option>
+                                <option value="SAR">ريال سعودي (ر.س)</option>
+                                <option value="AED">درهم إماراتي (د.إ)</option>
+                                <option value="EGP">جنيه مصري (ج.م)</option>
+                                <option value="JOD">دينار أردني (د.أ)</option>
+                                <option value="KWD">دينار كويتي (د.ك)</option>
+                                <option value="QAR">ريال قطري (ر.ق)</option>
+                                <option value="BHD">دينار بحريني (د.ب)</option>
+                                <option value="OMR">ريال عماني (ر.ع)</option>
+                                <option value="LYD">دينار ليبي (د.ل)</option>
+                                <option value="MAD">درهم مغربي (د.م)</option>
+                                <option value="TND">دينار تونسي (د.ت)</option>
+                                <option value="DZD">دينار جزائري (د.ج)</option>
+                                <option value="LBP">ليرة لبنانية (ل.ل)</option>
+                                <option value="SYP">ليرة سورية (ل.س)</option>
+                                <option value="YER">ريال يمني (ر.ي)</option>
+                                <option value="SDG">جنيه سوداني (ج.س)</option>
+                            </select>
+                        </div>
+                        <p style="font-size: 0.66rem; color: #ccc; margin: 4px 0 0 0;">ملاحظة: تقريب المبالغ لأقرب 250 يضل خاص بالدينار العراقي بس (حسب فئات الأوراق النقدية)؛ باقي العملات تنقرب لأقرب رقمين عشريين عادي.</p>
+                    </div>
+
+                    <div class="settings-section">
                         <h3>🎮 سعر ساعة الـ PS4</h3>
                         <div class="form-group">
-                            <label>السعر (د.ع/س):</label>
+                            <label>السعر (<span id="cur-lbl-ps-price">د.ع</span>/س):</label>
                             <input type="number" id="setting-ps-price" step="250">
                         </div>
                         <button class="btn-add-item" onclick="updatePs4Price()">تحديث سعر الساعة</button>
@@ -820,6 +849,7 @@
                     </div>
                 </div>
 
+
                 <div id="tab-stats" class="tab-panel">
                     <div class="settings-section">
                         <h3>📊 المنتجات الأكثر مبيعاً</h3>
@@ -837,7 +867,7 @@
                 <div id="tab-lottery" class="tab-panel">
                     <div class="settings-section">
                         <h3>🎟️ قرعة الفواتير (10 آلاف دينار فأكثر)</h3>
-                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">كل فاتورة تثبت بمبلغ 10,000 د.ع أو أكثر تاخذ رقم تلقائي من 1 إلى 100. لما توصل الدورة 100 فاتورة، النظام يسوي قرعة عشوائية ويختار فاتورة وحدة فايزة بخصم 10,000 د.ع، وبعدها يبلش عد جديد من الصفر تلقائياً وبشكل دائم.</p>
+                        <p style="font-size: 0.7rem; color: #ccc; margin-top: 0;">كل فاتورة تثبت بمبلغ <span id="cur-lbl-raffle-min1">10,000</span> <span id="cur-lbl-raffle1">د.ع</span> أو أكثر تاخذ رقم تلقائي من 1 إلى 100. لما توصل الدورة 100 فاتورة، النظام يسوي قرعة عشوائية ويختار فاتورة وحدة فايزة بخصم <span id="cur-lbl-raffle-min2">10,000</span> <span id="cur-lbl-raffle2">د.ع</span>، وبعدها يبلش عد جديد من الصفر تلقائياً وبشكل دائم.</p>
                         
                         <div class="form-group">
                             <label>الحالة:</label>
@@ -1131,7 +1161,7 @@
             if (!key) { msgEl.textContent = 'اكتب مفتاح الاشتراك.'; msgEl.className = 'error'; return; }
             if (!navigator.onLine) { msgEl.textContent = 'تحتاج اتصال بالإنترنت للتفعيل أول مرة فقط.'; msgEl.className = 'error'; return; }
 
-            btn.disabled = true; msgEl.textContent = 'جاري التحقق...'; msgEl.className = '';
+            btn.disabled = true; msgEl.textContent = 'جاري التحقق... (قد تاخذ لين دقيقة أول مرة إذا السيرفر كان نايم)'; msgEl.className = '';
             try {
                 const deviceId = getOrCreateDeviceId();
                 const result = await verifyLicenseWithServer(key, deviceId);
@@ -1159,14 +1189,13 @@
         // ============ نهاية نظام الاشتراك السنوي ============
 
         // إعدادات تلغرام وواتساب ديناميكية (قابلة للتعديل من تبويب الإعدادات "📡 تلغرام وواتساب" بدون لمس الكود)
-        const DEFAULT_TELEGRAM_TOKEN = "8777588307:AAG0Oy2IcQ-wWzEGZFBNlUK5WFCQT_q4q3s";
-        const DEFAULT_TELEGRAM_CHAT_ID = "1237009798";
+        // ما فيه أي رمز افتراضي مكتوب بالكود - المستخدم لازم يدخل رمز البوت وآيدي الشات بنفسه من الإعدادات
 
         function getTelegramToken() {
-            return localStorage.getItem('cafe_telegram_token_v9') || DEFAULT_TELEGRAM_TOKEN;
+            return localStorage.getItem('cafe_telegram_token_v9') || "";
         }
         function getTelegramChatId() {
-            return localStorage.getItem('cafe_telegram_chatid_v9') || DEFAULT_TELEGRAM_CHAT_ID;
+            return localStorage.getItem('cafe_telegram_chatid_v9') || "";
         }
         function getWhatsappNumber() {
             return localStorage.getItem('cafe_whatsapp_number_v9') || "";
@@ -1335,12 +1364,13 @@
         };
 
         let productsList = JSON.parse(localStorage.getItem('cafe_products_list_v9')) || defaultProducts;
-        let systemPin = localStorage.getItem('cafe_system_pin_v9') || "66666";
+        let systemPin = localStorage.getItem('cafe_system_pin_v9') || "";
         let adminsList = JSON.parse(localStorage.getItem('cafe_admins_list_v9')) || [];
 
         // يتحقق إذا الرمز المدخل يخص الرمز الرئيسي أو أي أدمن مسجل بالنظام
         function isValidAdminPin(pin) {
-            if (pin === systemPin) return true;
+            if (!pin || !pin.trim()) return false;
+            if (systemPin && pin === systemPin) return true;
             return adminsList.some(a => a.pin === pin);
         }
         let customThemeColor = localStorage.getItem('cafe_custom_color_v9') || "#f39c12";
@@ -1448,8 +1478,96 @@
             return now.toLocaleDateString('en-US');
         }
 
+        // ============ نظام العملة ============
+        const CURRENCY_LIST = {
+            IQD: { symbol: 'د.ع', name: 'دينار عراقي' },
+            USD: { symbol: '$', name: 'دولار أمريكي' },
+            SAR: { symbol: 'ر.س', name: 'ريال سعودي' },
+            AED: { symbol: 'د.إ', name: 'درهم إماراتي' },
+            EGP: { symbol: 'ج.م', name: 'جنيه مصري' },
+            JOD: { symbol: 'د.أ', name: 'دينار أردني' },
+            KWD: { symbol: 'د.ك', name: 'دينار كويتي' },
+            QAR: { symbol: 'ر.ق', name: 'ريال قطري' },
+            BHD: { symbol: 'د.ب', name: 'دينار بحريني' },
+            OMR: { symbol: 'ر.ع', name: 'ريال عماني' },
+            LYD: { symbol: 'د.ل', name: 'دينار ليبي' },
+            MAD: { symbol: 'د.م', name: 'درهم مغربي' },
+            TND: { symbol: 'د.ت', name: 'دينار تونسي' },
+            DZD: { symbol: 'د.ج', name: 'دينار جزائري' },
+            LBP: { symbol: 'ل.ل', name: 'ليرة لبنانية' },
+            SYP: { symbol: 'ل.س', name: 'ليرة سورية' },
+            YER: { symbol: 'ر.ي', name: 'ريال يمني' },
+            SDG: { symbol: 'ج.س', name: 'جنيه سوداني' }
+        };
+        function getCurrencyCode() {
+            return localStorage.getItem('cafe_currency_v9') || 'IQD';
+        }
+        function curSym() {
+            return (CURRENCY_LIST[getCurrencyCode()] || CURRENCY_LIST.IQD).symbol;
+        }
+        function updateCurrencySetting(code) {
+            localStorage.setItem('cafe_currency_v9', code);
+            applyCurrencyLabels();
+            // نحدث السعر المعروض بشاشة الفاتورة الحالية فوراً حتى يعكس رمز العملة الجديد
+            if (typeof activeTable !== 'undefined' && activeTable) {
+                try { renderOrderList(); } catch (e) {}
+            }
+        }
+        // يحدث كل تسميات العملة الثابتة بالواجهة (خارج الفواتير والتقارير اللي أصلاً تتحدث لحالها)
+        function applyCurrencyLabels() {
+            const sym = curSym();
+            ['cur-lbl-discount', 'cur-lbl-price', 'cur-lbl-ps-price', 'cur-lbl-ach-desc', 'cur-lbl-raffle1', 'cur-lbl-raffle2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = sym;
+            });
+            const currencySelect = document.getElementById('setting-currency');
+            if (currencySelect) currencySelect.value = getCurrencyCode();
+            const goalEl = document.getElementById('cur-lbl-ach-goal');
+            if (goalEl) goalEl.textContent = getAchievementGoal().toLocaleString();
+            const raffleVal = getRaffleThreshold().toLocaleString();
+            ['cur-lbl-raffle-min1', 'cur-lbl-raffle-min2'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = raffleVal;
+            });
+        }
+        // ============ نهاية نظام العملة ============
+
+        // حدود "قرعة الفواتير" و"إنجاز المليون" لكل عملة - تقريباً نفس القيمة الفعلية
+        // بعملات مختلفة (مبنية على أسعار صرف تقريبية، تگدر تعدلها يدوياً من الكود إذا تغيرت أسعار الصرف)
+        const THRESHOLDS = {
+            IQD: { raffleMin: 10000,  achievementGoal: 1000000 },
+            USD: { raffleMin: 10,     achievementGoal: 1000 },
+            SAR: { raffleMin: 30,     achievementGoal: 3000 },
+            AED: { raffleMin: 30,     achievementGoal: 3000 },
+            EGP: { raffleMin: 250,    achievementGoal: 25000 },
+            JOD: { raffleMin: 5,      achievementGoal: 500 },
+            KWD: { raffleMin: 2,      achievementGoal: 200 },
+            QAR: { raffleMin: 30,     achievementGoal: 3000 },
+            BHD: { raffleMin: 3,      achievementGoal: 300 },
+            OMR: { raffleMin: 3,      achievementGoal: 300 },
+            LYD: { raffleMin: 35,     achievementGoal: 3500 },
+            MAD: { raffleMin: 80,     achievementGoal: 8000 },
+            TND: { raffleMin: 25,     achievementGoal: 2500 },
+            DZD: { raffleMin: 1000,   achievementGoal: 100000 },
+            LBP: { raffleMin: 700000, achievementGoal: 70000000 },
+            SYP: { raffleMin: 100000, achievementGoal: 10000000 },
+            YER: { raffleMin: 2500,   achievementGoal: 250000 },
+            SDG: { raffleMin: 5000,   achievementGoal: 500000 }
+        };
+        function getRaffleThreshold() {
+            return (THRESHOLDS[getCurrencyCode()] || THRESHOLDS.IQD).raffleMin;
+        }
+        function getAchievementGoal() {
+            return (THRESHOLDS[getCurrencyCode()] || THRESHOLDS.IQD).achievementGoal;
+        }
+
+        // تقريب المبلغ: للدينار العراقي بس يقرب لأقرب 250 (حسب فئات الأوراق النقدية)،
+        // لباقي العملات يقرب لأقرب رقمين عشريين عادي (مثال: 12.5 دولار).
         function roundToNearest250(amount) {
-            return Math.round(amount / 250) * 250;
+            if (getCurrencyCode() === 'IQD') {
+                return Math.round(amount / 250) * 250;
+            }
+            return Math.round(amount * 100) / 100;
         }
 
         function checkAndResetDailySales() {
@@ -1477,10 +1595,10 @@
             let reportMsg = `📊 *تقرير إغلاق يوم العمل المنتهي*\n`;
             reportMsg += `📅 ليوم: ${formattedDate}\n`;
             reportMsg += `-------------------------\n`;
-            reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${totalSales.toLocaleString()} د.ع*\n`;
-            reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
-            reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
-            reportMsg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${totalSales.toLocaleString()} ${curSym()}*\n`;
+            reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} ${curSym()}*\n`;
+            reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} ${curSym()}*\n`;
+            reportMsg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} ${curSym()}*\n`;
             reportMsg += `-------------------------\n`;
             reportMsg += `✨ تم بدء يوم عمل جديد وتصفير العدادات تلقائياً بنجاح.`;
 
@@ -1554,10 +1672,10 @@
             let msg = `📅 *تقرير مبيعات الأسبوع المنتهي*\n`;
             msg += `🗓️ حتى تاريخ: ${formattedDate}\n`;
             msg += `-------------------------\n`;
-            msg += `💰 إجمالي مبيعات الأسبوع: *${totalSales.toLocaleString()} د.ع*\n`;
-            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
-            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
-            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            msg += `💰 إجمالي مبيعات الأسبوع: *${totalSales.toLocaleString()} ${curSym()}*\n`;
+            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} ${curSym()}*\n`;
+            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} ${curSym()}*\n`;
+            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} ${curSym()}*\n`;
             msg += `-------------------------\n`;
             msg += `✨ تم بدء أسبوع عمل جديد وتصفير عداد الأسبوع تلقائياً بنجاح.`;
 
@@ -1573,10 +1691,10 @@
             let msg = `🗓️ *تقرير مبيعات الشهر المنتهي*\n`;
             msg += `🗓️ لشهر: ${formattedDate}\n`;
             msg += `-------------------------\n`;
-            msg += `💰 إجمالي مبيعات الشهر: *${totalSales.toLocaleString()} د.ع*\n`;
-            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} د.ع*\n`;
-            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} د.ع*\n`;
-            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} د.ع*\n`;
+            msg += `💰 إجمالي مبيعات الشهر: *${totalSales.toLocaleString()} ${curSym()}*\n`;
+            msg += `🎮 أرباح البلي والجيم والـ PS: *${gameSales.toLocaleString()} ${curSym()}*\n`;
+            msg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(totalSales - gameSales).toLocaleString()} ${curSym()}*\n`;
+            msg += `📉 إجمالي الخصومات الممنوحة: *${totalDiscounts.toLocaleString()} ${curSym()}*\n`;
             msg += `-------------------------\n`;
             msg += `✨ تم بدء شهر عمل جديد وتصفير عداد الشهر تلقائياً بنجاح.`;
 
@@ -1656,7 +1774,7 @@
             localStorage.setItem('cafe_ps_price_v9', psPricePerHour);
             saveToStorage();
             renderDynamicMenu();
-            alert(`تم تحديث سعر ساعة الـ PS4 إلى ${psPricePerHour.toLocaleString()} د.ع بنجاح! ✅`);
+            alert(`تم تحديث سعر ساعة الـ PS4 إلى ${psPricePerHour.toLocaleString()} ${curSym()} بنجاح! ✅`);
         }
 
         function updateTotalTables() {
@@ -1756,7 +1874,7 @@
                 row.innerHTML = `
                     <div class="row-info">
                         <strong>${index + 1}. ${prod.name}</strong>
-                        <span class="row-cat">الكمية المباعة: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} د.ع</span>
+                        <span class="row-cat">الكمية المباعة: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} ${curSym()}</span>
                     </div>
                 `;
                 container.appendChild(row);
@@ -1798,7 +1916,7 @@
                 msg += `لا توجد مبيعات مسجلة لهذه الفترة.\n`;
             } else {
                 list.forEach((prod, index) => {
-                    msg += `${index + 1}. ${prod.name} — الكمية: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} د.ع\n`;
+                    msg += `${index + 1}. ${prod.name} — الكمية: ${prod.qty} | الإيراد: ${prod.revenue.toLocaleString()} ${curSym()}\n`;
                 });
             }
 
@@ -1820,7 +1938,7 @@
 
         // يسجل فاتورة مؤهلة للقرعة (10 آلاف دينار فأكثر) ويرجع رقمها، أو null إذا ما تأهلت
         function registerInvoiceForLottery(amount, tableNum) {
-            if (amount < 10000) return null;
+            if (amount < getRaffleThreshold()) return null;
 
             invoiceLottery.currentNumber += 1;
             const now = new Date();
@@ -1860,11 +1978,11 @@
             let msg = `🎉 *نتيجة قرعة الفواتير - الدورة رقم ${finishedCycleId}* 🎉\n`;
             msg += `-------------------------\n`;
             msg += `🏆 الفاتورة الفائزة: رقم *${winner.number}*\n`;
-            msg += `💰 قيمتها: ${winner.amount.toLocaleString()} د.ع\n`;
+            msg += `💰 قيمتها: ${winner.amount.toLocaleString()} ${curSym()}\n`;
             msg += `📅 تاريخها: ${winner.date} - ${winner.time}\n`;
             msg += `▪️ طاولة رقم: ${winner.table}\n`;
             msg += `-------------------------\n`;
-            msg += `🎁 الجائزة: خصم 10,000 د.ع على الفاتورة القادمة لصاحب هذه الفاتورة!\n`;
+            msg += `🎁 الجائزة: خصم ${getRaffleThreshold().toLocaleString()} ${curSym()} على الفاتورة القادمة لصاحب هذه الفاتورة!\n`;
             msg += `✨ اكتملت 100 فاتورة، وتبدأ الآن دورة ترقيم جديدة من رقم 1.`;
 
             pendingInvoices.push(msg);
@@ -1877,7 +1995,7 @@
             processPendingInvoices();
             renderLotteryUI();
 
-            alert(`🎉 اكتملت 100 فاتورة!\nالفاتورة الفائزة بخصم 10,000 د.ع هي رقم ${winner.number} (${winner.amount.toLocaleString()} د.ع - طاولة ${winner.table}) بتاريخ ${winner.date}.\nبدأت دورة ترقيم جديدة من جديد. ✨`);
+            alert(`🎉 اكتملت 100 فاتورة!\nالفاتورة الفائزة بخصم ${getRaffleThreshold().toLocaleString()} ${curSym()} هي رقم ${winner.number} (${winner.amount.toLocaleString()} ${curSym()} - طاولة ${winner.table}) بتاريخ ${winner.date}.\nبدأت دورة ترقيم جديدة من جديد. ✨`);
         }
 
         // إجراء القرعة يدوياً قبل اكتمال الـ 100 (من الإعدادات فقط)
@@ -1910,7 +2028,7 @@
                         row.innerHTML = `
                             <div class="row-info">
                                 <strong>فاتورة رقم ${inv.number}</strong>
-                                <span class="row-cat">${inv.amount.toLocaleString()} د.ع | طاولة ${inv.table} | ${inv.date} - ${inv.time}</span>
+                                <span class="row-cat">${inv.amount.toLocaleString()} ${curSym()} | طاولة ${inv.table} | ${inv.date} - ${inv.time}</span>
                             </div>
                         `;
                         listEl.appendChild(row);
@@ -1921,7 +2039,7 @@
             if (winnerEl) {
                 if (invoiceLottery.lastWinner) {
                     const w = invoiceLottery.lastWinner;
-                    winnerEl.innerHTML = `🏆 آخر فائز (الدورة ${w.cycleId}): فاتورة رقم <strong>${w.number}</strong> بقيمة ${w.amount.toLocaleString()} د.ع - طاولة ${w.table} - بتاريخ ${w.date} ${w.time} (القرعة بتاريخ ${w.drawDate} ${w.drawTime})`;
+                    winnerEl.innerHTML = `🏆 آخر فائز (الدورة ${w.cycleId}): فاتورة رقم <strong>${w.number}</strong> بقيمة ${w.amount.toLocaleString()} ${curSym()} - طاولة ${w.table} - بتاريخ ${w.date} ${w.time} (القرعة بتاريخ ${w.drawDate} ${w.drawTime})`;
                 } else {
                     winnerEl.innerText = 'ما صارت أي قرعة لحد الآن.';
                 }
@@ -1942,10 +2060,10 @@
                 reportMsg += `📅 التاريخ: ${formattedDate}\n`;
                 reportMsg += `⏰ وقت الإغلاق: ${formattedTime}\n`;
                 reportMsg += `-------------------------\n`;
-                reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${dailyTotalSales.toLocaleString()} د.ع*\n`;
-                reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${dailyGameSales.toLocaleString()} د.ع*\n`;
-                reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(dailyTotalSales - dailyGameSales).toLocaleString()} د.ع*\n`;
-                reportMsg += `📉 إجمالي الخصومات الممنوحة: *${dailyTotalDiscounts.toLocaleString()} د.ع*\n`;
+                reportMsg += `💰 إجمالي مبيعات اليوم المستلمة: *${dailyTotalSales.toLocaleString()} ${curSym()}*\n`;
+                reportMsg += `🎮 إجمالي أرباح البلي والجيم والـ PS: *${dailyGameSales.toLocaleString()} ${curSym()}*\n`;
+                reportMsg += `🍹 أرباح المأكولات والمشروبات الصافية: *${(dailyTotalSales - dailyGameSales).toLocaleString()} ${curSym()}*\n`;
+                reportMsg += `📉 إجمالي الخصومات الممنوحة: *${dailyTotalDiscounts.toLocaleString()} ${curSym()}*\n`;
                 reportMsg += `-------------------------\n`;
                 reportMsg += `⚠️ تم تصفير العدادات اليومية والسجل بالكامل يدوياً بنجاح.`;
 
@@ -1991,7 +2109,7 @@
             msg += `📅 التاريخ: ${formattedDate}\n`;
             msg += `⏰ الوقت: ${formattedTime}\n`;
             msg += `-------------------------\n`;
-            msg += `🥇 المبيعات التراكمية: *${achievements.cumulativeSales.toLocaleString()} / 1,000,000 د.ع* ${achievements.cumulativeSales >= 1000000 ? '(تم الإنجاز ✅)' : ''}\n`;
+            msg += `🥇 المبيعات التراكمية: *${achievements.cumulativeSales.toLocaleString()} / ${getAchievementGoal().toLocaleString()} ${curSym()}* ${achievements.cumulativeSales >= getAchievementGoal() ? '(تم الإنجاز ✅)' : ''}\n`;
             msg += `💧 قناني الماء المباعة: *${achievements.waterBottlesSold} / 100 قنينة* ${achievements.waterBottlesSold >= 100 ? '(تم الإنجاز ✅)' : ''}\n`;
             msg += `🎮 ساعات تشغيل الـ PS: *${hoursLogged}س ${minsLogged}د / 50 ساعة* ${achievements.psActiveMinutes >= 3000 ? '(تم الإنجاز ✅)' : ''}\n`;
             msg += `🔥 فواتير اليوم المغلقة: *${achievements.todayClosedBillsCount} فاتورة*\n`;
@@ -2127,11 +2245,11 @@
                     html += `
                         <div class="product-card" style="background-color: var(--ps4-color);" onclick="startPsTimer(false, 0)">
                             <span class="prod-name">PS4 مفتوح</span>
-                            <span class="prod-price">${psPricePerHour.toLocaleString()} د.ع / س</span>
+                            <span class="prod-price">${psPricePerHour.toLocaleString()} ${curSym()} / س</span>
                         </div>
                         <div class="product-card" style="background-color: var(--ps4-limit-color);" onclick="startPsTimerLimitPrompt()">
                             <span class="prod-name">PS4 محدد</span>
-                            <span class="prod-price">${psPricePerHour.toLocaleString()} د.ع / س</span>
+                            <span class="prod-price">${psPricePerHour.toLocaleString()} ${curSym()} / س</span>
                         </div>
                     `;
                 }
@@ -2141,7 +2259,7 @@
                     html += `
                         <div class="product-card" onclick="addItemToActiveTable({id: ${prod.id}, name: '${prod.name}', price: ${prod.price}, category: '${prod.category}'})">
                             <span class="prod-name">${prod.name}</span>
-                            <span class="prod-price">${prod.price.toLocaleString()} د.ع</span>
+                            <span class="prod-price">${prod.price.toLocaleString()} ${curSym()}</span>
                         </div>
                     `;
                 });
@@ -2153,7 +2271,27 @@
         }
 
         function openSettingsWithPin() {
-            const pin = prompt("أدخل الرمز السري لفتح الإعدادات:");
+            // أول مرة يفتح فيها البرنامج (ما فيه رمز محفوظ بعد) - نطلب من صاحب المحل يسوي رمزه الخاص، ما فيه رمز افتراضي جاهز بالكود
+            let pin;
+            if (!systemPin) {
+                const newPin = prompt("هذا أول فتح للإعدادات - سوي رمز سري خاص فيك (4 أرقام أو أكثر):");
+                if (!newPin || newPin.trim().length < 4) {
+                    alert("لازم رمز مكون من 4 أرقام أو أكثر على الأقل. حاول مرة ثانية.");
+                    return;
+                }
+                const confirmPin = prompt("أكد الرمز السري من جديد:");
+                if (newPin.trim() !== confirmPin) {
+                    alert("الرمزين ما تطابقوا. حاول مرة ثانية من زر الإعدادات.");
+                    return;
+                }
+                systemPin = newPin.trim();
+                localStorage.setItem('cafe_system_pin_v9', systemPin);
+                alert("تم حفظ رمزك السري بنجاح ✅ احفظه بمكان آمن، رح تحتاجه كل مرة تفتح الإعدادات.");
+                pin = systemPin; // يفتح الإعدادات مباشرة أول مرة بدون ما يطلب الرمز من جديد
+            } else {
+                pin = prompt("أدخل الرمز السري لفتح الإعدادات:");
+            }
+
             if (isValidAdminPin(pin)) {
                 document.getElementById('settings-modal').style.display = 'flex';
                 renderSettingsItemsList();
@@ -2161,6 +2299,7 @@
 
                 document.getElementById('setting-ps-price').value = psPricePerHour;
                 document.getElementById('setting-total-tables').value = totalTables;
+                applyCurrencyLabels();
 
                 currentStatsPeriod = 'daily';
                 document.querySelectorAll('.stats-period-btn').forEach(b => b.classList.remove('active'));
@@ -2246,7 +2385,7 @@
                 row.innerHTML = `
                     <div class="row-info">
                         <strong>${prod.name}</strong>
-                        <span class="row-cat">قسم: ${catLabels[prod.category] || prod.category} | السعر: ${prod.price.toLocaleString()} د.ع</span>
+                        <span class="row-cat">قسم: ${catLabels[prod.category] || prod.category} | السعر: ${prod.price.toLocaleString()} ${curSym()}</span>
                     </div>
                     <div class="row-actions">
                         <button class="btn-row-edit" onclick="editProductPrice(${prod.id})">✏️ تعديل السعر</button>
@@ -2314,10 +2453,10 @@
         // تحديث وعرض الإنجازات في واجهة الإعدادات مع المؤشرات المائية الدقيقة
         function updateAchievementsUI() {
             // 1. أول مليون مبيعات
-            const salesGoal = 1000000;
+            const salesGoal = getAchievementGoal();
             const salesProgressPercent = Math.min((achievements.cumulativeSales / salesGoal) * 100, 100);
             document.getElementById('ach-million-progress').style.width = salesProgressPercent + '%';
-            document.getElementById('ach-million-text').innerText = `${achievements.cumulativeSales.toLocaleString()} / 1,000,000 د.ع`;
+            document.getElementById('ach-million-text').innerText = `${achievements.cumulativeSales.toLocaleString()} / ${salesGoal.toLocaleString()} ${curSym()}`;
             if (achievements.cumulativeSales >= salesGoal) {
                 document.getElementById('ach-million-badge').innerText = '🏆 تم الإنجاز!';
                 document.getElementById('ach-million-badge').style.color = '#2ecc71';
@@ -2815,7 +2954,7 @@
                             <span>⏳ مستمر</span>
                         </div>
                         <div style="font-size:0.75rem; color:var(--success-color); font-weight:bold;">
-                            المبلغ المؤقت الحالي: ${roundToNearest250(table.psElapsedCost).toLocaleString()} د.ع
+                            المبلغ المؤقت الحالي: ${roundToNearest250(table.psElapsedCost).toLocaleString()} ${curSym()}
                         </div>
                     </div>
                 `;
@@ -2847,7 +2986,7 @@
 
             const itemTotal = roundToNearest250(item.price * item.qty);
 
-            if(confirm(`هل تريد استلام حساب "${item.name}" بقيمة (${itemTotal.toLocaleString()} د.ع) بشكل منفرد؟`)) {
+            if(confirm(`هل تريد استلام حساب "${item.name}" بقيمة (${itemTotal.toLocaleString()} ${curSym()}) بشكل منفرد؟`)) {
                 
                 dailyTotalSales += itemTotal;
                 weeklyTotalSales += itemTotal;
@@ -2879,9 +3018,9 @@
                 if(item.timeDetails) {
                     message += `⏱️ التفاصيل: ${item.timeDetails}\n`;
                 }
-                message += `💰 المبلغ المستلم: *${itemTotal.toLocaleString()} د.ع*\n`;
+                message += `💰 المبلغ المستلم: *${itemTotal.toLocaleString()} ${curSym()}*\n`;
                 message += `-------------------------\n`;
-                message += `📈 *دخل الصندوق اليومي الحالي: ${dailyTotalSales.toLocaleString()} د.ع*`;
+                message += `📈 *دخل الصندوق اليومي الحالي: ${dailyTotalSales.toLocaleString()} ${curSym()}*`;
 
                 pendingInvoices.push(message);
 
@@ -2920,7 +3059,7 @@
                 div.className = 'order-item';
                 div.innerHTML = `
                     <div class="item-details">
-                        <strong>${item.name}</strong> <small>(${item.price.toLocaleString()} د.ع)</small>
+                        <strong>${item.name}</strong> <small>(${item.price.toLocaleString()} ${curSym()})</small>
                         ${item.timeDetails ? `<div style="font-size:0.68rem; color:#bbb; margin-top:2px;">${item.timeDetails}</div>` : ''}
                     </div>
                     <div class="item-actions">
@@ -2933,10 +3072,10 @@
                 container.appendChild(div);
             });
 
-            document.getElementById('total-price').innerText = finalTotal.toLocaleString() + ' د.ع';
+            document.getElementById('total-price').innerText = finalTotal.toLocaleString() + ' ' + curSym();
             
             const discBox = document.getElementById('disc-box');
-            discBox.setAttribute('data-print-val', discount > 0 ? `مقدار الخصم: -${discount.toLocaleString()} د.ع` : 'الخصم: 0 د.ع');
+            discBox.setAttribute('data-print-val', discount > 0 ? `مقدار الخصم: -${discount.toLocaleString()} ${curSym()}` : `الخصم: 0 ${curSym()}`);
         }
 
         function closeAndSaveInvoice() {
@@ -2954,7 +3093,7 @@
 
             finalTotal = roundToNearest250(finalTotal);
 
-            if(confirm(`هل تريد تثبيت حساب طاولة ${activeTable} بمبلغ (${finalTotal.toLocaleString()} د.ع)؟`)) {
+            if(confirm(`هل تريد تثبيت حساب طاولة ${activeTable} بمبلغ (${finalTotal.toLocaleString()} ${curSym()})؟`)) {
                 
                 dailyTotalSales += finalTotal;
                 dailyTotalDiscounts += discount;
@@ -3004,14 +3143,14 @@
                 
                 if(tablesData[activeTable].psElapsedCost > 0) {
                     let label = tablesData[activeTable].psIsLimit ? `محدد بـ ${tablesData[activeTable].psLimitMinutes}د` : "مفتوح";
-                    message += `🎮 وقت PS4 ${label} (${tablesData[activeTable].psTimeString}): ${roundToNearest250(tablesData[activeTable].psElapsedCost).toLocaleString()} د.ع\n`;
+                    message += `🎮 وقت PS4 ${label} (${tablesData[activeTable].psTimeString}): ${roundToNearest250(tablesData[activeTable].psElapsedCost).toLocaleString()} ${curSym()}\n`;
                     
                     const elapsedMs = new Date().getTime() - tablesData[activeTable].psStartTime;
                     achievements.psActiveMinutes += Math.floor(elapsedMs / (1000 * 60));
                 }
                 
                 tablesData[activeTable].items.forEach(item => {
-                    message += `▪️ ${item.name} (عدد ${item.qty}): ${(item.price * item.qty).toLocaleString()} د.ع\n`;
+                    message += `▪️ ${item.name} (عدد ${item.qty}): ${(item.price * item.qty).toLocaleString()} ${curSym()}\n`;
                     if(item.timeDetails) {
                         message += `   ⏱️ ${item.timeDetails}\n`;
                     }
@@ -3019,13 +3158,13 @@
                 
                 message += `-------------------------\n`;
                 if(discount > 0) {
-                    message += `🔻 الخصم الممنوح: -${discount.toLocaleString()} د.ع\n`;
+                    message += `🔻 الخصم الممنوح: -${discount.toLocaleString()} ${curSym()}\n`;
                     message += `-------------------------\n`;
                 }
-                message += `💰 *المجموع النهائي لطاولة ${activeTable}: ${finalTotal.toLocaleString()} د.ع*\n\n`;
-                message += `📈 *إجمالي دخل الصندوق اليومي: ${dailyTotalSales.toLocaleString()} د.ع*\n`;
-                message += `🎮 *أرباح البلي والجيم والـ PS لليوم: ${dailyGameSales.toLocaleString()} د.ع*\n`;
-                message += `📉 *إجمالي خصومات الصندوق اليومي: ${dailyTotalDiscounts.toLocaleString()} د.ع*`;
+                message += `💰 *المجموع النهائي لطاولة ${activeTable}: ${finalTotal.toLocaleString()} ${curSym()}*\n\n`;
+                message += `📈 *إجمالي دخل الصندوق اليومي: ${dailyTotalSales.toLocaleString()} ${curSym()}*\n`;
+                message += `🎮 *أرباح البلي والجيم والـ PS لليوم: ${dailyGameSales.toLocaleString()} ${curSym()}*\n`;
+                message += `📉 *إجمالي خصومات الصندوق اليومي: ${dailyTotalDiscounts.toLocaleString()} ${curSym()}*`;
 
                 pendingInvoices.push(message);
 
@@ -3070,13 +3209,27 @@
             isProcessing = true;
 
             const nextInvoice = pendingInvoices[0];
-            const url = `https://api.telegram.org/bot${getTelegramToken()}/sendMessage`;
+            const token = getTelegramToken();
+            const chatId = getTelegramChatId();
+
+            if (!token || !chatId) {
+                // تلغرام مو مفعّل بالإعدادات - نرسل واتساب لو مفعّل، ونكمل بدون ما نعلق بالانتظار
+                sendToWhatsAppIfConfigured(nextInvoice);
+                pendingInvoices.shift();
+                saveToStorage();
+                isProcessing = false;
+                updateNetworkStatusUI();
+                processPendingInvoices();
+                return;
+            }
+
+            const url = `https://api.telegram.org/bot${token}/sendMessage`;
 
             fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    chat_id: getTelegramChatId(),
+                    chat_id: chatId,
                     text: nextInvoice,
                     parse_mode: 'Markdown'
                 })
@@ -3440,12 +3593,12 @@
 
             if (table.psElapsedCost > 0) {
                 const label = table.psIsLimit ? `محدد ${table.psLimitMinutes}د` : 'مفتوح';
-                drawRow(`وقت PS4 (${label}) ${table.psTimeString}`, `${roundToNearest250(table.psElapsedCost).toLocaleString()} د.ع`, smallFont, false);
+                drawRow(`وقت PS4 (${label}) ${table.psTimeString}`, `${roundToNearest250(table.psElapsedCost).toLocaleString()} ${curSym()}`, smallFont, false);
             }
 
             table.items.forEach(item => {
                 const lineTotal = (item.price * item.qty).toLocaleString();
-                drawRow(`${item.name} × ${item.qty}`, `${lineTotal} د.ع`, baseFont, false);
+                drawRow(`${item.name} × ${item.qty}`, `${lineTotal} ${curSym()}`, baseFont, false);
                 if (item.timeDetails) {
                     drawSmallLine(item.timeDetails);
                 }
@@ -3453,9 +3606,9 @@
 
             drawDashedLine();
             if (discount > 0) {
-                drawRow('الخصم:', `-${discount.toLocaleString()} د.ع`, baseFont, false);
+                drawRow('الخصم:', `-${discount.toLocaleString()} ${curSym()}`, baseFont, false);
             }
-            drawRow('المجموع الكلي:', `${finalTotal.toLocaleString()} د.ع`, Math.round(baseFont * 1.25), true);
+            drawRow('المجموع الكلي:', `${finalTotal.toLocaleString()} ${curSym()}`, Math.round(baseFont * 1.25), true);
             drawDashedLine();
             drawCenter('شكراً لزيارتكم 🙏', smallFont, false);
             y += Math.round(lineH * 0.5);
@@ -3586,6 +3739,7 @@
         }
 
         checkLicenseStatus();
+        applyCurrencyLabels();
         applyThemeColor(customThemeColor);
         checkAndResetAllPeriods();
         renderDynamicMenu();
