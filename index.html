@@ -601,8 +601,18 @@
         </div>
         <div class="header-actions">
             <div id="network-indicator" class="network-status status-online">متصل</div>
+            <button class="btn-settings" onclick="openHelpModal()">🆘 مساعدة</button>
             <button class="btn-settings" id="btn-printer-settings" onclick="openPrinterSettingsModal()">🖨️ الطابعة</button>
             <button class="btn-settings" onclick="openSettingsWithPin()">⚙️ الإعدادات</button>
+        </div>
+    </div>
+
+    <div id="help-contact-modal" style="display: none; position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+        <div class="license-card" style="max-width: 340px; width: 100%;">
+            <h2>🆘 مساعدة وتواصل</h2>
+            <p style="font-size: 0.78rem; color: #ccc;">تحتاج مساعدة، تجديد اشتراك، أو عندك استفسار؟ تواصل معي مباشرة:</p>
+            <div id="help-contact-box"></div>
+            <button class="license-btn" style="margin-top: 14px;" onclick="closeHelpModal()">إغلاق</button>
         </div>
     </div>
 
@@ -1035,29 +1045,60 @@
         }
 
         // معلومات التواصل تبع صاحب البرنامج (واتساب/انستغرام/رابط) - تنجلب من نفس سيرفر التفعيل
-        // وتظهر بشاشة القفل حتى يگدر صاحب المحل يتواصل ياك بسهولة لو احتاج تفعيل أو تجديد
+        // وتظهر بشاشة القفل وبزر المساعدة داخل البرنامج، حتى يگدر صاحب المحل يتواصل ياك بسهولة
         let cachedContactInfo = null;
-        function renderContactBox(info) {
-            const box = document.getElementById('license-contact-box');
-            if (!box) return;
-            if (!info || (!info.whatsapp && !info.instagram && !info.website)) {
-                box.style.display = 'none';
-                return;
-            }
+        function buildContactBoxHtml(info) {
+            if (!info || (!info.whatsapp && !info.instagram && !info.website)) return '';
             let html = '<p>تحتاج مساعدة أو تفعيل/تجديد الاشتراك؟ تواصل وياي:</p>';
             if (info.whatsapp) html += `<a class="whatsapp" href="https://wa.me/${info.whatsapp}" target="_blank" rel="noopener">📱 واتساب</a>`;
             if (info.instagram) html += `<a class="instagram" href="${info.instagram}" target="_blank" rel="noopener">📸 انستغرام</a>`;
             if (info.website) html += `<a class="website" href="${info.website}" target="_blank" rel="noopener">🔗 رابط</a>`;
+            return html;
+        }
+        function renderContactBox(info, boxId) {
+            const box = document.getElementById(boxId || 'license-contact-box');
+            if (!box) return;
+            const html = buildContactBoxHtml(info);
+            if (!html) { box.style.display = 'none'; return; }
             box.innerHTML = html;
             box.style.display = 'block';
         }
+        // يحول رابط انستغرام كامل إلى @يوزر مختصر للعرض، ويخلي كريدت المطور رابط مباشر يفتح فعلياً
+        function updateDeveloperCredit(info) {
+            const el = document.getElementById('dev-name-link');
+            if (!el || !info || !info.instagram) return;
+            let handle = info.instagram;
+            try {
+                const url = new URL(info.instagram);
+                const parts = url.pathname.split('/').filter(Boolean);
+                if (parts.length > 0) handle = '@' + parts[0];
+            } catch (e) { /* مو رابط صحيح بصيغة URL، نعرضه متل ما هو */ }
+            el.outerHTML = `<a id="dev-name-link" href="${info.instagram}" target="_blank" rel="noopener" style="color:inherit; text-decoration:underline;">${handle}</a>`;
+        }
         async function loadContactInfoIntoGate() {
-            if (cachedContactInfo) { renderContactBox(cachedContactInfo); return; }
+            if (cachedContactInfo) {
+                renderContactBox(cachedContactInfo, 'license-contact-box');
+                return;
+            }
             try {
                 const res = await fetch(`${LICENSE_SERVER_URL}/api/contact-info`);
                 cachedContactInfo = await res.json();
-                renderContactBox(cachedContactInfo);
+                renderContactBox(cachedContactInfo, 'license-contact-box');
+                updateDeveloperCredit(cachedContactInfo);
             } catch (e) { /* ما مشكلة إذا ما توفر نت، بس ما تظهر معلومات التواصل هذي المرة */ }
+        }
+
+        async function openHelpModal() {
+            document.getElementById('help-contact-modal').style.display = 'flex';
+            if (cachedContactInfo) {
+                renderContactBox(cachedContactInfo, 'help-contact-box');
+            } else {
+                await loadContactInfoIntoGate();
+                renderContactBox(cachedContactInfo, 'help-contact-box');
+            }
+        }
+        function closeHelpModal() {
+            document.getElementById('help-contact-modal').style.display = 'none';
         }
 
         function showLicenseGate(msg, isError) {
@@ -1075,6 +1116,9 @@
             const daysLeft = Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
             if (daysLeft <= 14 && daysLeft > 0) {
                 banner.style.display = 'block';
+                banner.style.background = '';
+                banner.style.cursor = '';
+                banner.onclick = null;
                 banner.textContent = `⚠️ اشتراكك ينتهي خلال ${daysLeft} يوم — تواصل لتجديد الاشتراك السنوي.`;
             } else {
                 banner.style.display = 'none';
@@ -1107,15 +1151,80 @@
         // يشتغل بكل فتح للبرنامج، وبالخلفية كل فترة، وكل ما يرجع النت.
         // الفحص الأساسي محلي بالكامل (يقفل حتى بدون نت إذا خلص الاشتراك)،
         // والاتصال بالسيرفر يصير بالخلفية بصمت فقط لتحديث تاريخ الانتهاء تلقائياً
-        // (إذا جدد صاحب المحل الاشتراك) أو لاكتشاف إلغاء مبكر - بدون ما يطلب من المستخدم إدخال المفتاح مرة ثانية.
+        // مدة التجربة المجانية التلقائية (يومين) - تتسجل بالسيرفر مربوطة بعنوان IP الجهاز،
+        // حتى لو حذف الزبون التطبيق ونزله من جديد (أو مسح بيانات المتصفح)، ما ياخذ تجربة ثانية.
+        const TRIAL_USED_STORAGE = 'cafe_trial_used_v1';
+        const TRIAL_EXPIRES_STORAGE = 'cafe_trial_expires_v1';
+
+        function showTrialBanner(expiresAt) {
+            const banner = document.getElementById('license-expiry-banner');
+            if (!banner) return;
+            const daysLeft = Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000));
+            banner.style.display = 'block';
+            banner.style.background = '#2980b9';
+            banner.style.cursor = 'pointer';
+            banner.innerHTML = `🎁 تجربة مجانية - تنتهي خلال ${daysLeft > 0 ? daysLeft : 'أقل من'} يوم. اضغط هنا لتفعيل مفتاح اشتراك`;
+            banner.onclick = () => showLicenseGate('عندك مفتاح اشتراك؟ فعّله الآن حتى يستمر البرنامج بعد فترة التجربة.');
+        }
+
+        async function requestFreeTrialFromServer() {
+            const deviceId = getOrCreateDeviceId();
+            const res = await fetch(`${LICENSE_SERVER_URL}/api/trial/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ deviceId })
+            });
+            return res.json();
+        }
+
         async function checkLicenseStatus() {
             const key = localStorage.getItem(LICENSE_KEY_STORAGE);
-            if (!key) { showLicenseGate('الرجاء إدخال مفتاح الاشتراك لتفعيل البرنامج (مرة واحدة فقط).'); return; }
+
+            if (!key) {
+                const trialUsed = localStorage.getItem(TRIAL_USED_STORAGE);
+                const trialExpires = parseInt(localStorage.getItem(TRIAL_EXPIRES_STORAGE)) || 0;
+                const now = Date.now();
+
+                if (!trialUsed) {
+                    // أول فتح للبرنامج - نطلب تجربة مجانية من السيرفر (يحتاج نت أول مرة بس، حتى تتسجل بالـ IP)
+                    if (!navigator.onLine) {
+                        showLicenseGate('يحتاج البرنامج اتصال بالإنترنت أول مرة حتى يفعّل لك التجربة المجانية أو الاشتراك.', true);
+                        return;
+                    }
+                    try {
+                        const result = await requestFreeTrialFromServer();
+                        if (result.granted) {
+                            localStorage.setItem(TRIAL_USED_STORAGE, '1');
+                            localStorage.setItem(TRIAL_EXPIRES_STORAGE, String(result.expiresAt));
+                            hideLicenseGate();
+                            showTrialBanner(result.expiresAt);
+                        } else {
+                            // already_used: هذا الجهاز/الشبكة سبق واستخدم تجربة مجانية من قبل
+                            localStorage.setItem(TRIAL_USED_STORAGE, '1');
+                            localStorage.setItem(TRIAL_EXPIRES_STORAGE, String(result.expiresAt || 0));
+                            showLicenseGate('هذا الجهاز أو الشبكة سبق واستخدم التجربة المجانية من قبل. أدخل مفتاح اشتراك للاستمرار.', true);
+                        }
+                    } catch (err) {
+                        showLicenseGate('تعذر الاتصال بسيرفر التفعيل لبدء التجربة المجانية. تأكد من الإنترنت وحاول مرة ثانية.', true);
+                    }
+                    return;
+                }
+                if (trialExpires > now) {
+                    // التجربة لسه شغالة (محلياً، ما تحتاج نت بعد أول مرة)
+                    hideLicenseGate();
+                    showTrialBanner(trialExpires);
+                    return;
+                }
+                // التجربة المجانية خلصت وما عنده مفتاح اشتراك
+                showLicenseGate('انتهت فترة التجربة المجانية (يومين). أدخل مفتاح اشتراك للاستمرار.', true);
+                return;
+            }
 
             if (isClockTampered()) { lockAppWithReason('clock_tampered'); return; }
 
             const cachedExpiresAt = parseInt(localStorage.getItem(LICENSE_EXPIRES_STORAGE)) || 0;
             const now = Date.now();
+
 
             // القفل الأساسي: قرار محلي بحت، يشتغل حتى لو الجهاز مقطوع عن النت تماماً.
             if (cachedExpiresAt > 0 && now > cachedExpiresAt) {
@@ -3739,6 +3848,7 @@
         }
 
         checkLicenseStatus();
+        loadContactInfoIntoGate();
         applyCurrencyLabels();
         applyThemeColor(customThemeColor);
         checkAndResetAllPeriods();
